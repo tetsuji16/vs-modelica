@@ -57,11 +57,18 @@ Research sources and version-sensitive links are recorded in [docs/REFERENCES.md
 
 ## Status
 
-Phases 0 and 1 have passed their gates; phase 2 (diagram rendering) is next. Current implementation state is tracked
+Phase 2 (diagram rendering) is in progress; phases 0 and 1 have passed their gates. Current implementation state is tracked
 in [docs/PROGRESS.md](./docs/PROGRESS.md), [TASKS.md](./TASKS.md) and
 [docs/FEATURE-MATRIX.md](./docs/FEATURE-MATRIX.md); gate evidence lives in
 [docs/gate-reports/](./docs/gate-reports/). No claim of Modex compatibility is made until the
 corresponding gates in the feature matrix pass.
+
+## Trademarks and affiliation
+
+Modelica Studio OSS is an independent project and is not affiliated with or endorsed by Modex,
+the Modelica Association, Microsoft, or the Open Source Modelica Consortium. Product names are
+used only for accurate nominative reference. See
+[docs/05-clean-room-and-licensing.md](./docs/05-clean-room-and-licensing.md).
 
 ## License
 

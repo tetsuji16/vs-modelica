@@ -72,7 +72,11 @@ describe("diagram webview shell", () => {
   it("injects theme tokens rather than hard-coded colours", () => {
     const css = diagramStylesheet();
     expect(css).toContain("--mso-bg: var(--vscode-editor-background);");
-    expect(css).not.toMatch(/#[0-9a-fA-F]{6}/);
+    // Colour literals are confined to the :root token block, where the drawing
+    // surface's deliberate light sheet lives (see tokens.test.ts). A literal in
+    // a rule body would be chrome ignoring the theme.
+    const rules = css.slice(css.indexOf("}") + 1);
+    expect(rules).not.toMatch(/#[0-9a-fA-F]{6}/);
   });
 });
 

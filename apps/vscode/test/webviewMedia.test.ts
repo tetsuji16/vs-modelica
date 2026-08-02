@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { describe, expect, it } from "vitest";
-import { diagramStylesheet } from "../src/webview/diagramHtml.js";
+import { LAYOUT } from "@modelica-studio/ui";
+import { buildDiagramHtml, diagramStylesheet } from "../src/webview/diagramHtml.js";
 import { isDiagramMessage, isWebviewReady } from "../src/webview/protocol.js";
 
 const mediaDir = path.resolve(__dirname, "..", "media");
@@ -44,6 +45,90 @@ describe("diagram layout", () => {
     // A flex column whose items may overflow needs min-height:0 to shrink.
     expect(css.match(/min-height: 0;/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
     expect(css).not.toMatch(/\.mso-sheet \{[^}]*height: 100%/);
+  });
+});
+
+describe("visual spec conformance", () => {
+  // docs/04-visual-spec.md is the parity contract with the reference product.
+  // Every number it states had no consumer before these tests: LAYOUT was
+  // exported and imported nowhere, and the stylesheet defined no rule at all
+  // for .mso-tool-rail, .mso-tool, .mso-mode-controls or .mso-status, so the
+  // markup shipped those classes entirely unstyled.
+  const css = diagramStylesheet();
+  const html = buildDiagramHtml({
+    cspSource: "vscode-webview://x",
+    nonce: "n",
+    scriptUri: "diagram.js",
+    styleUri: "diagram.css",
+    title: "t",
+  });
+
+  it("drives the 46px tool rail from the shared layout constant", () => {
+    expect(LAYOUT.toolRailWidth).toBe(46);
+    expect(css).toContain(`--mso-tool-rail-width: ${LAYOUT.toolRailWidth}px`);
+    expect(css).toMatch(/\.mso-tool-rail \{[^}]*width: var\(--mso-tool-rail-width\)/);
+  });
+
+  it("floats the rail over the canvas instead of taking flex space", () => {
+    // A rail in the flex flow narrows the sheet and shifts the diagram.
+    expect(css).toMatch(/\.mso-tool-rail \{[^}]*position: absolute/);
+  });
+
+  it("gives the drawing extent a light sheet in every theme", () => {
+    // MSL icons and annotation colours are model data and are never
+    // theme-remapped, so a themed (dark) sheet hides the model's own strokes.
+    expect(css).toContain("--mso-sheet-bg: #ffffff");
+    expect(css).toMatch(/\.mso-extent \{[^}]*background-color: var\(--mso-sheet-bg\)/);
+    // Outside the extent stays neutral editor background.
+    expect(css).toContain("--mso-canvas-bg: var(--vscode-editor-background)");
+  });
+
+  it("draws a major and minor grid sized from the scale", () => {
+    expect(css).toContain("--mso-grid-major-size");
+    expect(css).toContain("--mso-grid-minor-size");
+    expect(css).toMatch(/\.mso-extent \{[^}]*background-image:/);
+  });
+
+  it("drops the extent shadow in forced colours", () => {
+    expect(css).toContain("@media not (forced-colors: active)");
+  });
+
+  it("renders the rail groups the spec lists, in order", () => {
+    const tools = [...html.matchAll(/data-(?:tool|view-tool)="([a-z-]+)"/g)].map((m) => m[1]);
+    expect(tools).toEqual([
+      "select",
+      "connection",
+      "polygon",
+      "rectangle",
+      "ellipse",
+      "text",
+      "bitmap",
+      "fit",
+      "zoom-in",
+      "zoom-out",
+      "reset",
+    ]);
+  });
+
+  it("renders two segmented rows top right, not one", () => {
+    expect(html).toContain('aria-label="View mode"');
+    expect(html).toContain('aria-label="Simulation"');
+    const runTools = [...html.matchAll(/data-run-tool="([a-z-]+)"/g)].map((m) => m[1]);
+    expect(runTools).toEqual(["route", "run", "run-menu"]);
+  });
+
+  it("styles every class the markup ships", () => {
+    // The defect this catches: markup carrying a class the stylesheet never
+    // mentions renders as unstyled default HTML in production.
+    const classes = new Set(
+      [...html.matchAll(/class="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)),
+    );
+    for (const name of classes) {
+      if (name === "is-active") {
+        continue;
+      }
+      expect(css, `.${name} is in the markup but has no rule`).toContain(`.${name}`);
+    }
   });
 });
 

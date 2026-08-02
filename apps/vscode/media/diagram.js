@@ -32,10 +32,23 @@
     "../../packages/ui/dist/tokens.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.LAYOUT = exports.DESIGN_TOKENS = void 0;
+      exports.LAYOUT_TOKENS = exports.LAYOUT = exports.DESIGN_TOKENS = void 0;
       exports.renderTokenCss = renderTokenCss;
       exports.DESIGN_TOKENS = Object.freeze({
         "--mso-bg": "var(--vscode-editor-background)",
+        /* Neutral area outside the drawing extent. */
+        "--mso-canvas-bg": "var(--vscode-editor-background)",
+        /*
+         * The drawing extent itself. Modelica annotation colours are model data and
+         * are never theme-remapped, and MSL icons assume a light sheet: on a dark
+         * theme a themed sheet would hide the model's own dark strokes. So the sheet
+         * stays a light working surface in every theme, like every other Modelica
+         * tool, while the chrome around it follows the theme.
+         */
+        "--mso-sheet-bg": "#ffffff",
+        "--mso-grid-major": "rgb(0 0 0 / 12%)",
+        "--mso-grid-minor": "rgb(0 0 0 / 5%)",
+        "--mso-toolbar-bg": "var(--vscode-editorWidget-background)",
         "--mso-fg": "var(--vscode-editor-foreground)",
         "--mso-border": "var(--vscode-panel-border)",
         "--mso-focus": "var(--vscode-focusBorder)",
@@ -61,7 +74,10 @@
         /** Reference capture viewport used by the visual harness. */
         referenceViewport: Object.freeze({ width: 2048, height: 1153 })
       });
-      function renderTokenCss(tokens = exports.DESIGN_TOKENS) {
+      exports.LAYOUT_TOKENS = Object.freeze({
+        "--mso-tool-rail-width": `${exports.LAYOUT.toolRailWidth}px`
+      });
+      function renderTokenCss(tokens = { ...exports.DESIGN_TOKENS, ...exports.LAYOUT_TOKENS }) {
         const body = Object.entries(tokens).map(([name, value]) => `  ${name}: ${value};`).join("\n");
         return `:root {
 ${body}
@@ -174,14 +190,14 @@ ${body}
         }
         return parts.length === 0 ? "" : ` transform="${parts.join(" ")}"`;
       }
-      function normalise(extent) {
-        const x = Math.min(extent.min.x, extent.max.x);
-        const y = Math.min(extent.min.y, extent.max.y);
+      function normalise(extent2) {
+        const x = Math.min(extent2.min.x, extent2.max.x);
+        const y = Math.min(extent2.min.y, extent2.max.y);
         return {
           x,
           y,
-          width: Math.abs(extent.max.x - extent.min.x),
-          height: Math.abs(extent.max.y - extent.min.y)
+          width: Math.abs(extent2.max.x - extent2.min.x),
+          height: Math.abs(extent2.max.y - extent2.min.y)
         };
       }
       function polyline(points) {
@@ -321,14 +337,14 @@ ${body}
       exports.componentTransform = componentTransform;
       exports.renderSceneGraph = renderSceneGraph;
       var svg_js_1 = require_svg();
-      function span(extent) {
-        const x = Math.min(extent.min.x, extent.max.x);
-        const y = Math.min(extent.min.y, extent.max.y);
+      function span(extent2) {
+        const x = Math.min(extent2.min.x, extent2.max.x);
+        const y = Math.min(extent2.min.y, extent2.max.y);
         return {
           x,
           y,
-          width: Math.abs(extent.max.x - extent.min.x),
-          height: Math.abs(extent.max.y - extent.min.y)
+          width: Math.abs(extent2.max.x - extent2.min.x),
+          height: Math.abs(extent2.max.y - extent2.min.y)
         };
       }
       function componentTransform(component) {
@@ -644,9 +660,10 @@ ${body}
   var vscode = acquireVsCodeApi();
   var sheet = document.getElementById("mso-sheet");
   var stage = document.getElementById("mso-stage");
+  var extent = document.getElementById("mso-extent");
   var status = document.getElementById("mso-status");
   var zoomReadout = document.getElementById("mso-zoom");
-  if (sheet === null || stage === null || status === null || zoomReadout === null) {
+  if (sheet === null || stage === null || extent === null || status === null || zoomReadout === null) {
     throw new Error("diagram shell is missing its canvas elements");
   }
   var content = { width: 0, height: 0 };
@@ -656,9 +673,20 @@ ${body}
     const box = sheet.getBoundingClientRect();
     return { width: box.width, height: box.height };
   }
+  var MINOR_STEP = 10;
+  var MAJOR_STEP = 100;
   function apply() {
     stage.style.transform = (0, import_ui.toCssTransform)(view);
     zoomReadout.textContent = (0, import_ui.formatZoom)(view);
+    const style = extent.style;
+    style.left = `${view.x}px`;
+    style.top = `${view.y}px`;
+    style.width = `${content.width * view.scale}px`;
+    style.height = `${content.height * view.scale}px`;
+    style.setProperty("--mso-grid-minor-size", `${MINOR_STEP * view.scale}px`);
+    style.setProperty("--mso-grid-major-size", `${MAJOR_STEP * view.scale}px`);
+    style.setProperty("--mso-grid-minor", MINOR_STEP * view.scale < 4 ? "transparent" : "");
+    extent.hidden = content.width === 0 || content.height === 0;
   }
   function setView(next, userDriven) {
     view = next;

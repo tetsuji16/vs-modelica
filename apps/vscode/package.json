@@ -114,7 +114,7 @@
             "filenamePattern": "*.mo"
           }
         ],
-        "priority": "option"
+        "priority": "default"
       }
     ],
     "commands": [

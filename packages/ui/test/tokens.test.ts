@@ -3,11 +3,30 @@ import { DESIGN_TOKENS, LAYOUT, renderTokenCss } from "../src/tokens.js";
 import { SIDEBAR_SECTIONS } from "../src/sections.js";
 
 describe("design tokens", () => {
-  it("maps every token to a VS Code theme variable", () => {
+  /*
+   * Chrome follows the theme. The drawing surface does not, and that is a
+   * deliberate exception rather than a leak: Modelica annotation colours are
+   * model data that is never theme-remapped, and MSL icons assume a light
+   * sheet, so a dark sheet would hide the model's own strokes. The exception is
+   * enumerated here so a *new* hard-coded colour still fails the rule.
+   */
+  const SURFACE_TOKENS = new Set(["--mso-sheet-bg", "--mso-grid-major", "--mso-grid-minor"]);
+
+  it("maps every chrome token to a VS Code theme variable", () => {
     for (const [name, value] of Object.entries(DESIGN_TOKENS)) {
       expect(name.startsWith("--mso-"), name).toBe(true);
+      if (SURFACE_TOKENS.has(name)) {
+        continue;
+      }
       expect(value.startsWith("var(--vscode-"), `${name}: ${value}`).toBe(true);
     }
+  });
+
+  it("keeps the drawing-surface exception to exactly the known tokens", () => {
+    const hardCoded = Object.entries(DESIGN_TOKENS)
+      .filter(([, value]) => !value.startsWith("var(--vscode-"))
+      .map(([name]) => name);
+    expect(new Set(hardCoded)).toEqual(SURFACE_TOKENS);
   });
 
   it("renders a deterministic :root block", () => {

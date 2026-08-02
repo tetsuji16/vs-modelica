@@ -327,3 +327,48 @@ the real stylesheet.
 pnpm -r check   -> clean
 pnpm vitest run -> 28 files, 182 tests, all passing
 ```
+
+---
+
+## 2026-08-02 — Modex parity adversarial review (visual layer)
+
+Review report: `docs/gate-reports/modex-parity-visual-review.md`. Seven defects
+found and fixed; suite 182 -> 192 tests.
+
+Root cause behind most of them: `docs/04-visual-spec.md` states measurements that
+**nothing in the code referenced**. `LAYOUT.toolRailWidth = 46` was exported and
+imported nowhere, and the stylesheet defined no rule at all for `.mso-tool-rail`,
+`.mso-tool`, `.mso-mode-controls` or `.mso-status` — the markup shipped those
+classes and the browser rendered unstyled default buttons. A spec whose numbers
+have no consumer is documentation, not a contract.
+
+1. **Canvas chrome entirely unstyled** — rail now floats over the canvas at
+   `var(--mso-tool-rail-width)`, generated from `LAYOUT.toolRailWidth`. Measured
+   46.0 px.
+2. **No grid** — screen-space `.mso-extent` layer, pitch = step x scale (10/100
+   Modelica units). Verified 69.58px -> 83.49px across one 1.2x zoom step.
+3. **Sheet inherited the theme** — broke dark mode, because annotation colours
+   are model data we must not theme-remap and MSL icons assume a light sheet.
+   Now an explicit white working extent inside neutral chrome; the "all tokens
+   are theme variables" rule keeps a bounded, tested exception list.
+4. **One segmented row top right instead of two** — run/route group added.
+5. **`.mo` files did not open in the diagram editor** — `priority` was
+   `"option"`, so the graphical editor was Reopen-With-only.
+6. **Sheet shadow in forced colours** — confined to
+   `@media not (forced-colors: active)`.
+7. **Non-affiliation disclaimer shipped nowhere** — it lived only in
+   `docs/05-clean-room-and-licensing.md`. Now in README, with a test; the same
+   test mechanically enforces the AGENTS.md identity rule (no `modex` in ids).
+
+New guard worth naming: *"styles every class the markup ships"* walks every
+`class="..."` in the generated HTML and fails if the stylesheet has no rule for
+it — the check that would have caught defect 1 the day it landed.
+
+Clean-room position re-checked and sound: everything was derived from our own
+spec plus public descriptions/screenshots; no reference asset, string or code is
+in this repository, and our identity is `modelicaStudio.*` throughout.
+
+```text
+pnpm -r check   -> clean
+pnpm vitest run -> 28 files, 192 tests, all passing
+```

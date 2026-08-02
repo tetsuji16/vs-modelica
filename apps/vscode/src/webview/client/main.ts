@@ -33,10 +33,17 @@ const CONTRACT_VERSION = 1;
 const vscode = acquireVsCodeApi();
 const sheet = document.getElementById("mso-sheet");
 const stage = document.getElementById("mso-stage");
+const extent = document.getElementById("mso-extent");
 const status = document.getElementById("mso-status");
 const zoomReadout = document.getElementById("mso-zoom");
 
-if (sheet === null || stage === null || status === null || zoomReadout === null) {
+if (
+  sheet === null ||
+  stage === null ||
+  extent === null ||
+  status === null ||
+  zoomReadout === null
+) {
   throw new Error("diagram shell is missing its canvas elements");
 }
 
@@ -51,9 +58,34 @@ function size(): ViewportSize {
   return { width: box.width, height: box.height };
 }
 
+/**
+ * One Modelica coordinate step per minor grid square, ten per major square.
+ * MSL icon extents are conventionally -100..100, so this is the same 10/100
+ * ruling every Modelica tool draws.
+ */
+const MINOR_STEP = 10;
+const MAJOR_STEP = 100;
+
 function apply(): void {
   stage!.style.transform = toCssTransform(view);
   zoomReadout!.textContent = formatZoom(view);
+
+  /*
+   * The grid lives in screen space, not model space: drawn inside the scaled
+   * stage its 1px rules would scale too and blur at fractional zoom. So the
+   * extent is positioned and sized in screen pixels to match the transformed
+   * drawing, and the grid pitch is the step size multiplied by the scale.
+   */
+  const style = extent!.style;
+  style.left = `${view.x}px`;
+  style.top = `${view.y}px`;
+  style.width = `${content.width * view.scale}px`;
+  style.height = `${content.height * view.scale}px`;
+  style.setProperty("--mso-grid-minor-size", `${MINOR_STEP * view.scale}px`);
+  style.setProperty("--mso-grid-major-size", `${MAJOR_STEP * view.scale}px`);
+  // Below roughly a pixel per square the minor ruling is noise, not guidance.
+  style.setProperty("--mso-grid-minor", MINOR_STEP * view.scale < 4 ? "transparent" : "");
+  extent!.hidden = content.width === 0 || content.height === 0;
 }
 
 function setView(next: Viewport, userDriven: boolean): void {

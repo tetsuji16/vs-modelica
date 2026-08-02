@@ -7,6 +7,19 @@
  */
 export const DESIGN_TOKENS: Readonly<Record<string, string>> = Object.freeze({
   "--mso-bg": "var(--vscode-editor-background)",
+  /* Neutral area outside the drawing extent. */
+  "--mso-canvas-bg": "var(--vscode-editor-background)",
+  /*
+   * The drawing extent itself. Modelica annotation colours are model data and
+   * are never theme-remapped, and MSL icons assume a light sheet: on a dark
+   * theme a themed sheet would hide the model's own dark strokes. So the sheet
+   * stays a light working surface in every theme, like every other Modelica
+   * tool, while the chrome around it follows the theme.
+   */
+  "--mso-sheet-bg": "#ffffff",
+  "--mso-grid-major": "rgb(0 0 0 / 12%)",
+  "--mso-grid-minor": "rgb(0 0 0 / 5%)",
+  "--mso-toolbar-bg": "var(--vscode-editorWidget-background)",
   "--mso-fg": "var(--vscode-editor-foreground)",
   "--mso-border": "var(--vscode-panel-border)",
   "--mso-focus": "var(--vscode-focusBorder)",
@@ -35,8 +48,22 @@ export const LAYOUT = Object.freeze({
   referenceViewport: Object.freeze({ width: 2048, height: 1153 }),
 });
 
+/**
+ * Tokens whose value is a layout constant rather than a theme colour.
+ *
+ * These exist so the visual spec's measurements have exactly one home. Before
+ * this, `LAYOUT.toolRailWidth` was exported and consumed by nothing while the
+ * stylesheet carried no rail width at all, so the spec's numbers could not be
+ * violated by the CSS because the CSS never referenced them.
+ */
+export const LAYOUT_TOKENS: Readonly<Record<string, string>> = Object.freeze({
+  "--mso-tool-rail-width": `${LAYOUT.toolRailWidth}px`,
+});
+
 /** Renders the tokens as a `:root { ... }` CSS block for webview injection. */
-export function renderTokenCss(tokens: Readonly<Record<string, string>> = DESIGN_TOKENS): string {
+export function renderTokenCss(
+  tokens: Readonly<Record<string, string>> = { ...DESIGN_TOKENS, ...LAYOUT_TOKENS },
+): string {
   const body = Object.entries(tokens)
     .map(([name, value]) => `  ${name}: ${value};`)
     .join("\n");
