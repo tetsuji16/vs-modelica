@@ -1,0 +1,69 @@
+// Runs the sample model end to end: load MSL, load the sample, check it,
+// simulate it, and assert the closed loop actually behaves.
+//
+// Run with:  omc run-sample.mos   (from the samples directory)
+//
+// This is the project's end-to-end proof: it exercises the same compiler
+// entry points the extension drives (loadModel, loadFile, checkModel) and then
+// simulates, so a regression in the OMC bridge shows up here as a failure
+// rather than as a blank canvas in the UI.
+
+loadModel(Modelica, {"4.0.0"});
+getErrorString();
+
+loadFile("SpeedControlledDCMotorDrive.mo");
+getErrorString();
+
+print("--- checkModel ---\n");
+print(checkModel(SpeedControlledDCMotorDrive) + "\n");
+getErrorString();
+
+// Simulation generates a few dozen C files, a makefile and an executable.
+// Those are build output, not sources, so they are kept out of samples/ and
+// out of git. loadFile above already ran, so the relative path was resolved
+// before this directory change.
+mkdir("build");
+cd("build");
+
+print("--- simulate ---\n");
+stopTime := 1.5;
+intervals := 500;
+res := simulate(
+  SpeedControlledDCMotorDrive,
+  stopTime = stopTime,
+  numberOfIntervals = intervals,
+  tolerance = 1e-6,
+  outputFormat = "mat",
+  fileNamePrefix = "SpeedControlledDCMotorDrive");
+resultFile := "SpeedControlledDCMotorDrive_res.mat";
+print(getErrorString());
+
+print("--- results ---\n");
+// The actual point count is read from the file rather than assumed: the solver
+// may emit events in addition to the uniform grid, and assuming intervals + 1
+// makes readSimulationResult fail with a dimension mismatch.
+n := readSimulationResultSize(resultFile);
+data := readSimulationResult(resultFile, {time, load.w, armatureCurrent.i}, n);
+t := data[1];
+w := data[2];
+i := data[3];
+
+iTrack := integer(0.55 / stopTime * (n - 1)) + 1;
+iEnd := n;
+
+// The sampled times are printed with the values, so the sample cannot silently
+// assert against the wrong point on the trajectory.
+print("t[track] = " + String(t[iTrack]) + " s, w = " + String(w[iTrack]) + " rad/s\n");
+print("t[end]   = " + String(t[iEnd]) + " s, w = " + String(w[iEnd]) + " rad/s\n");
+
+// Tracking: the shaft reaches the 120 rad/s command before the disturbance.
+tracking := abs(w[iTrack] - 120) < 2.0;
+// Rejection: the PI loop returns to the command after the 0.6 s torque step.
+rejection := abs(w[iEnd] - 120) < 2.0;
+// Sanity: the drive actually drew current, so this is not a trivially dead model.
+alive := max(abs(i)) > 0.1;
+
+print("tracking  " + (if tracking then "OK" else "FAILED") + "\n");
+print("rejection " + (if rejection then "OK" else "FAILED") + "\n");
+print("alive     " + (if alive then "OK" else "FAILED") + "\n");
+print(if tracking and rejection and alive then "SAMPLE OK\n" else "SAMPLE FAILED\n");

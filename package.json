@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "sample": "node tools/run-sample.mjs",
     "test:visual": "node tools/visual/capture.mjs",
     "test:visual:update": "node tools/visual/capture.mjs --update",
     "clean": "pnpm -r clean"

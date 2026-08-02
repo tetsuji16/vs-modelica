@@ -30,3 +30,36 @@ jobs:
       - name: Assert no OpenModelica code is bundled
         shell: bash
         run: node tools/ci/assert-no-bundled-omc.mjs
+
+  sample:
+    # The end-to-end sample needs a real compiler, so it runs in its own job
+    # against an installed OpenModelica rather than being skipped in the matrix.
+    name: end-to-end sample (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install OpenModelica
+        run: |
+          for deb in deb deb-src; do
+            echo "$deb http://build.openmodelica.org/apt $(lsb_release -cs) release"
+          done | sudo tee /etc/apt/sources.list.d/openmodelica.list
+          curl -fsSL http://build.openmodelica.org/apt/openmodelica.asc \
+            | sudo gpg --dearmor -o /usr/share/keyrings/openmodelica.gpg
+          sudo sed -i "s|^deb |deb [signed-by=/usr/share/keyrings/openmodelica.gpg] |" \
+            /etc/apt/sources.list.d/openmodelica.list
+          sudo apt-get update
+          sudo apt-get install -y omc omlib-modelica-4.0.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Run the sample end to end
+        # Turns the local "no compiler, skip" path into a hard failure in CI.
+        env:
+          MODELICA_STUDIO_REQUIRE_OMC: "1"
+        run: pnpm sample
