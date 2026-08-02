@@ -1,0 +1,88 @@
+/* Static shell styles. Theme values come from the injected design tokens. */
+.mso-canvas-shell {
+  display: flex;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.mso-tool-rail {
+  width: 46px;
+  flex: 0 0 46px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 4px;
+  border-right: 1px solid var(--mso-border);
+}
+
+.mso-tool,
+.mso-mode {
+  background: transparent;
+  color: var(--mso-fg);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  min-height: 28px;
+  cursor: pointer;
+}
+
+.mso-tool:hover:enabled,
+.mso-mode:hover:enabled {
+  background: var(--mso-hover);
+}
+
+.mso-tool:focus-visible,
+.mso-mode:focus-visible {
+  outline: 1px solid var(--mso-focus);
+  outline-offset: 1px;
+}
+
+.mso-tool:disabled,
+.mso-mode:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mso-sheet-area {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.mso-mode-controls {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+}
+
+.mso-mode.is-active {
+  border-color: var(--mso-focus);
+}
+
+.mso-sheet {
+  width: min(80%, 900px);
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--mso-border);
+  background-image:
+    linear-gradient(to right, var(--mso-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--mso-border) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.9;
+}
+
+.mso-status {
+  color: var(--mso-description-fg);
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

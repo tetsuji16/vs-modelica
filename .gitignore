@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+*.vsix
+*.log
+.DS_Store
+.vscode-test/
+.modelica-studio/runs/
+.modelica-studio/cache/
+*_res.mat
+*_res.csv
+*_prof.xml
+*_prof.html
+*.exe
+*.dll
+*.o
+*.obj

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1153" viewBox="0 0 2048 1153" data-viewport="reference-2048x1153">
+  <rect class="background" x="0" y="0" width="2048" height="1153" />
+  <g class="tool-rail" data-width="46">
+    <rect class="tool" data-tool="select" x="4" y="6" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="connection" x="4" y="38" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="polygon" x="4" y="70" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="rectangle" x="4" y="102" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="ellipse" x="4" y="134" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="text" x="4" y="166" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="bitmap" x="4" y="198" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="fit" x="4" y="230" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="zoom-in" x="4" y="262" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="zoom-out" x="4" y="294" width="38" height="28" rx="4" />
+    <rect class="tool" data-tool="reset" x="4" y="326" width="38" height="28" rx="4" />
+  </g>
+  <g class="mode-controls" data-compact="false">
+    <rect class="mode" data-mode="diagram" x="1808" y="8" width="72" height="24" rx="4" />
+    <rect class="mode" data-mode="icon" x="1884" y="8" width="72" height="24" rx="4" />
+    <rect class="mode" data-mode="text" x="1960" y="8" width="72" height="24" rx="4" />
+  </g>
+  <rect class="sheet" x="246" y="-24" width="1602" height="1202" />
+  <text class="status" x="246" y="1202">Empty diagram</text>
+</svg>

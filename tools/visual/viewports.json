@@ -1,0 +1,14 @@
+{
+  "$schema": "./viewports.schema.json",
+  "capturedWith": {
+    "note": "Deterministic vector capture. Pixel capture with a pinned Chromium is introduced in phase 2 (ADR-008).",
+    "theme": "vscode-light",
+    "uiScale": 1
+  },
+  "viewports": [
+    { "id": "reference-2048x1153", "width": 2048, "height": 1153, "uiScale": 1 },
+    { "id": "reference-2048x1153@200", "width": 2048, "height": 1153, "uiScale": 2 },
+    { "id": "narrow-1180x800", "width": 1180, "height": 800, "uiScale": 1 },
+    { "id": "compact-780x700", "width": 780, "height": 700, "uiScale": 1 }
+  ]
+}

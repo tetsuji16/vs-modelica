@@ -1,0 +1,192 @@
+{
+  "name": "@modelica-studio/vscode",
+  "displayName": "Modelica Studio OSS",
+  "description": "Open-source graphical Modelica editor powered by OpenModelica",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Visualization",
+    "Machine Learning"
+  ],
+  "activationEvents": [
+    "onLanguage:modelica",
+    "workspaceContains:**/*.mo"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "modelica",
+        "aliases": [
+          "Modelica"
+        ],
+        "extensions": [
+          ".mo"
+        ]
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "modelicaStudio",
+          "title": "Modelica Studio",
+          "icon": "media/activity-bar.svg"
+        }
+      ]
+    },
+    "views": {
+      "modelicaStudio": [
+        {
+          "id": "modelicaStudio.libraries",
+          "name": "Libraries"
+        },
+        {
+          "id": "modelicaStudio.models",
+          "name": "Models"
+        },
+        {
+          "id": "modelicaStudio.results",
+          "name": "Results"
+        },
+        {
+          "id": "modelicaStudio.figures",
+          "name": "Figures"
+        },
+        {
+          "id": "modelicaStudio.documents",
+          "name": "Documents"
+        },
+        {
+          "id": "modelicaStudio.elements",
+          "name": "Elements"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "modelicaStudio.libraries",
+        "contents": "No Modelica libraries are loaded yet.\n[Show Environment Status](command:modelicaStudio.showEnvironment)"
+      },
+      {
+        "view": "modelicaStudio.models",
+        "contents": "No Modelica models were found in this workspace."
+      },
+      {
+        "view": "modelicaStudio.results",
+        "contents": "No simulation has produced results yet."
+      },
+      {
+        "view": "modelicaStudio.figures",
+        "contents": "No figures have been created yet."
+      },
+      {
+        "view": "modelicaStudio.documents",
+        "contents": "No documents are attached to this workspace."
+      },
+      {
+        "view": "modelicaStudio.elements",
+        "contents": "Open a Modelica class to inspect its elements."
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "modelicaStudio.diagram",
+        "displayName": "Modelica Diagram",
+        "selector": [
+          {
+            "filenamePattern": "*.mo"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "modelicaStudio.open",
+        "title": "Open Diagram",
+        "category": "Modelica Studio",
+        "icon": "$(circuit-board)"
+      },
+      {
+        "command": "modelicaStudio.showEnvironment",
+        "title": "Show Environment Status",
+        "category": "Modelica Studio",
+        "icon": "$(server-environment)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "modelicaStudio.open",
+          "when": "resourceLangId == modelica",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "modelicaStudio.open",
+          "when": "resourceLangId == modelica"
+        },
+        {
+          "command": "modelicaStudio.showEnvironment"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Modelica Studio OSS",
+      "properties": {
+        "modelicaStudio.omc.path": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to omc. Empty means OPENMODELICAHOME/PATH auto-detection."
+        },
+        "modelicaStudio.omc.startupTimeoutMs": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 1000,
+          "description": "Timeout for the OpenModelica version handshake in milliseconds."
+        },
+        "modelicaStudio.ai.provider": {
+          "type": "string",
+          "enum": [
+            "ollama",
+            "openrouter"
+          ],
+          "default": "ollama"
+        },
+        "modelicaStudio.ai.ollama.baseUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434"
+        },
+        "modelicaStudio.ai.ollama.model": {
+          "type": "string",
+          "default": "qwen3-coder"
+        },
+        "modelicaStudio.ai.openRouter.model": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "echo \"unit tests run from the workspace root via vitest\"",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@modelica-studio/contracts": "workspace:*",
+    "@modelica-studio/omc": "workspace:*",
+    "@modelica-studio/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.125.0",
+    "typescript": "^5.9.2"
+  }
+}
