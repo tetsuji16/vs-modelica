@@ -25,9 +25,13 @@ implemented and verified lives in [docs/PROGRESS.md](./docs/PROGRESS.md).
 
 ## Phase 2
 
-- [ ] Define annotation and scene-graph contracts.
+- [x] Define annotation and scene-graph contracts. (`packages/contracts/src/scene.ts`)
 - [ ] Decode coordinate systems, placements, primitives, connections, inheritance.
+      Coordinate systems, placements and all six primitives are done and verified
+      against MSL; connections and inheritance remain.
 - [ ] Render SVG diagram/icon views with pan/zoom/fit.
+      Renderer core is done (`packages/ui/src/render/svg.ts`, baselines in
+      `fixtures/baselines/icons/`); webview mounting and pan/zoom/fit remain.
 - [ ] Implement Libraries, Models, and Elements trees/search.
 - [ ] Render the reference DC motor fixture and visual baselines.
 - [ ] Produce phase-2 gate report.

@@ -107,3 +107,30 @@ authority and this probe remains the pre-session fallback used when the session 
 - Date: 2026-08-02
 
 Use project-owned versioned JSON for figures, documents, and run manifests. Do not claim import compatibility with proprietary `.mx*` formats without separately approved lawful specifications.
+
+## ADR-012: decode graphic annotations positionally as well as by name
+
+- Status: accepted
+- Date: 2026-08-02
+
+`omc` returns graphic records in positional form with a bare `-` for every
+defaulted field (`Rectangle(true, {0.0, 0.0}, 0.0, {0, 0, 255}, ...)`), while
+`.mo` source uses the named form (`Rectangle(extent={{...}})`). Reading only the
+named form produced empty scenes against real MSL classes. Every field is
+therefore resolved by name first and by its Modelica-specification index second,
+and a bare `-` is represented as a first-class `missing` node so each field falls
+back to its own default instead of being coerced to `0`. Unknown records are
+reported in `GraphicsResult.unsupported` rather than dropped silently.
+
+## ADR-013: the renderer is a pure function and flips the y axis exactly once
+
+- Status: accepted
+- Date: 2026-08-02
+
+Modelica's y axis points up, SVG's points down. The flip is applied once, on the
+root group (`scale(1,-1)`); text and bitmaps carry a local counter-flip so glyphs
+stay upright. The renderer reads no clock, no random source and no DOM, so the
+same scene graph always yields byte-identical markup — which is what makes the
+committed SVG baselines in `fixtures/baselines/icons/` meaningful evidence rather
+than decoration. Geometry is never invented: a partial `Ellipse` is drawn as an
+arc, and a `Line` with fewer than two points renders nothing.

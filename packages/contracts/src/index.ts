@@ -1,3 +1,5 @@
+export * from "./scene.js";
+
 export const CONTRACT_VERSION = 1 as const;
 
 export type DocumentRevision = number;

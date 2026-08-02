@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200" width="240" height="240" preserveAspectRatio="xMidYMid meet" data-name="Modelica.Electrical.Analog.Basic.Resistor">
+  <g transform="scale(1,-1)">
+    <rect x="-70" y="-30" width="140" height="60" stroke="#0000ff" stroke-width="0.25" fill="#ffffff"/>
+    <polyline points="-90,0 -70,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+    <polyline points="70,0 90,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+    <text x="0" y="-60" fill="#000000" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 -60" style="transform: scaleY(-1)">R=%R</text>
+    <text x="0" y="70" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 70" style="transform: scaleY(-1)">%name</text>
+  </g>
+</svg>

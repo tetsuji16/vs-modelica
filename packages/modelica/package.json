@@ -1,5 +1,5 @@
 {
-  "name": "@modelica-studio/ui",
+  "name": "@modelica-studio/modelica",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -16,7 +16,6 @@
     "@modelica-studio/contracts": "workspace:*"
   },
   "devDependencies": {
-    "@modelica-studio/modelica": "workspace:*",
     "@modelica-studio/omc": "workspace:*"
   }
 }

@@ -118,7 +118,68 @@ Security posture added in this slice:
 New runtime dependency: `zeromq` ^6.5.0 (MIT), recorded in `docs/DEPENDENCIES.md` with its
 native-binary status. It contains no OpenModelica code, so the clean-room position is unchanged.
 
+## 2026-08-02 — Phase 2 slice 1 complete (annotation decoding + SVG rendering)
+
+### Verified commands (this working copy)
+
+```text
+pnpm check        -> eslint + prettier + tsc across 5 projects: clean
+pnpm test         -> 22 files, 111 tests, all passing
+pnpm test:visual  -> 4 deterministic baselines verified
+node tools/ci/assert-no-bundled-omc.mjs -> clean-room check passed
+```
+
+### What is implemented
+
+| Task                                                          | Status | Files                                                                                                      |
+| ------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------- |
+| Scene-graph contract (shapes, style, coordinate system)        | done   | `packages/contracts/src/scene.ts`                                                                          |
+| Annotation expression reader (tolerant, never throws)          | done   | `packages/modelica/src/annotation/parser.ts`                                                               |
+| Graphic record decoding (6 primitives + coordinate system)     | done   | `packages/modelica/src/annotation/graphics.ts`                                                             |
+| `Placement` / `Transformation` decoding and extent mirroring   | done   | `packages/modelica/src/annotation/placement.ts`                                                            |
+| Allowlisted annotation getters and raw-reply channel           | done   | `packages/omc/src/session/session.ts` (`callRaw`, `getIconAnnotation`, `getElementAnnotations`, …)          |
+| Deterministic scene-graph → SVG renderer                       | done   | `packages/ui/src/render/svg.ts`                                                                            |
+| Unit tests (reader, decoder, placement, renderer)              | done   | `packages/modelica/test/*.test.ts`, `packages/ui/test/svg.test.ts`                                         |
+| Live MSL decode test and end-to-end SVG baselines              | done   | `packages/modelica/test/annotation.integration.test.ts`, `packages/ui/test/iconPipeline.integration.test.ts`, `fixtures/baselines/icons/` |
+| Slice gate report                                              | done   | `docs/gate-reports/phase-2-slice-1.md`                                                                     |
+
+### The thing that had to be corrected by real evidence
+
+OMC does **not** reply with the named record form used in `.mo` source. It
+replies positionally, with a bare `-` for each defaulted field:
+
+```
+{-100.0,-100.0,100.0,100.0,true,-,-,,{Rectangle(true, {0.0, 0.0}, 0.0, {0, 0, 255}, …
+```
+
+The first decoder assumed named arguments and produced empty scenes. Both forms
+are now read through the same specification field order, and `-` is a
+first-class `missing` node so each field defaults independently instead of being
+coerced to `0`.
+
+Measured against the installed compiler: **211 shapes decoded from 24 classes in
+`Modelica.Electrical.Analog.Basic`, 0 unsupported records**;
+`CauerLowPassAnalog` reports 16 connections.
+
+### Not yet done in this area
+
+- hatch/gradient fill patterns are approximated by fill colour (value preserved
+  in `data-fill-pattern`);
+- `Bitmap(fileName=…)` paths are not yet resolved against the library root;
+- text extent-fitting uses an 80 % height heuristic rather than font metrics.
+
 ### Next slice (recommended order)
+
+1. **Phase 2 slice 2 (remainder)** — mount the renderer in the diagram webview
+   with pan/zoom/fit, and add pinned-Chromium pixel baselines (supersedes ADR-008).
+2. **Phase 2 slice 3** — connections and inheritance (compose component icons and
+   connection lines into a full diagram), then the Libraries/Models/Elements trees
+   with search, and the reference DC motor fixture.
+3. Produce `docs/gate-reports/phase-2.md` before starting phase 3.
+
+---
+
+## Earlier — Phase 1 next-slice plan (superseded by the entry above)
 
 1. **Phase 2 slice 1** — define the annotation and scene-graph contracts in
    `packages/contracts`, then decode `getIconAnnotation` / `getDiagramAnnotation`

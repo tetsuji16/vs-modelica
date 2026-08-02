@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200" width="240" height="240" preserveAspectRatio="xMidYMid meet" data-name="Modelica.Electrical.Analog.Basic.Ground">
+  <g transform="scale(1,-1)">
+    <polyline points="-60,50 60,50" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+    <polyline points="-40,30 40,30" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+    <polyline points="-20,10 20,10" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+    <polyline points="0,90 0,50" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+    <text x="0" y="-30" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 -30" style="transform: scaleY(-1)">%name</text>
+  </g>
+</svg>

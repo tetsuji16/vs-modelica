@@ -51,6 +51,16 @@ importers:
 
   packages/contracts: {}
 
+  packages/modelica:
+    dependencies:
+      '@modelica-studio/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      '@modelica-studio/omc':
+        specifier: workspace:*
+        version: link:../omc
+
   packages/omc:
     dependencies:
       '@modelica-studio/contracts':
@@ -60,7 +70,18 @@ importers:
         specifier: ^6.5.0
         version: 6.5.0
 
-  packages/ui: {}
+  packages/ui:
+    dependencies:
+      '@modelica-studio/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      '@modelica-studio/modelica':
+        specifier: workspace:*
+        version: link:../modelica
+      '@modelica-studio/omc':
+        specifier: workspace:*
+        version: link:../omc
 
 packages:
 
