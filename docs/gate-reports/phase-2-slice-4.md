@@ -13,14 +13,14 @@ window.
 
 ## What was implemented
 
-| Layer     | File                                          | Content                                                                     |
-| --------- | --------------------------------------------- | --------------------------------------------------------------------------- |
-| View math | `packages/ui/src/view/viewport.ts`            | `fitViewport` / `zoomAt` / `zoomBy` / `panBy` / `clampScale` / `toCssTransform` — pure, DOM-free |
-| Protocol  | `apps/vscode/src/webview/protocol.ts`         | `DiagramMessage` (`diagram/scene`, `diagram/status`) and the `webview/ready` handshake |
-| Host      | `apps/vscode/src/diagramScene.ts`             | Resolves the document's class via the compiler, renders it, packages the message |
-| Host      | `apps/vscode/src/diagramEditor.ts`            | Wires the custom editor to `OmcService`, reloads on save                    |
-| Client    | `apps/vscode/src/webview/client/main.ts`      | Pointer/wheel/keyboard interaction, SVG adoption, zoom readout              |
-| Build     | `apps/vscode/tools/build-webview.mjs`         | esbuild IIFE bundle → `media/diagram.js`, so shipped code == tested code    |
+| Layer     | File                                     | Content                                                                                          |
+| --------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| View math | `packages/ui/src/view/viewport.ts`       | `fitViewport` / `zoomAt` / `zoomBy` / `panBy` / `clampScale` / `toCssTransform` — pure, DOM-free |
+| Protocol  | `apps/vscode/src/webview/protocol.ts`    | `DiagramMessage` (`diagram/scene`, `diagram/status`) and the `webview/ready` handshake           |
+| Host      | `apps/vscode/src/diagramScene.ts`        | Resolves the document's class via the compiler, renders it, packages the message                 |
+| Host      | `apps/vscode/src/diagramEditor.ts`       | Wires the custom editor to `OmcService`, reloads on save                                         |
+| Client    | `apps/vscode/src/webview/client/main.ts` | Pointer/wheel/keyboard interaction, SVG adoption, zoom readout                                   |
+| Build     | `apps/vscode/tools/build-webview.mjs`    | esbuild IIFE bundle → `media/diagram.js`, so shipped code == tested code                         |
 
 ## Verification
 
@@ -34,12 +34,12 @@ Interactive verification was done in a real browser against the
 `CauerLowPassAnalog` baseline, driving the actual bundled `media/diagram.js`
 through a temporary harness that stubs `acquireVsCodeApi`:
 
-| Action              | Result                                                    |
-| ------------------- | --------------------------------------------------------- |
-| scene delivered     | 11 components and 16 connections drawn, status line correct |
-| initial fit         | whole circuit visible, 66%, centred                        |
-| zoom in ×2          | 66% → 95%, content stays centred                           |
-| reset view          | back to 100%, whole diagram visible                        |
+| Action          | Result                                                      |
+| --------------- | ----------------------------------------------------------- |
+| scene delivered | 11 components and 16 connections drawn, status line correct |
+| initial fit     | whole circuit visible, 66%, centred                         |
+| zoom in ×2      | 66% → 95%, content stays centred                            |
+| reset view      | back to 100%, whole diagram visible                         |
 
 ## Two bugs the tests did not catch
 
@@ -62,7 +62,7 @@ test: `does not re-scale content the renderer has already sized`.
 
 With the scale corrected the zoom read a plausible 66%, but the leftmost voltage
 source was still sliced by the sheet edge. The SVG's declared `width`/`height`
-describe the *coordinate system*, not the *ink*: component name labels are drawn
+describe the _coordinate system_, not the _ink_: component name labels are drawn
 outside the `viewBox` on purpose (OMEdit does the same), so the drawing is wider
 than it claims to be.
 

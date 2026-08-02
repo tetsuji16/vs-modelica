@@ -21,6 +21,36 @@ describe("extension manifest", () => {
     }
   });
 
+  it("registers every command it contributes", () => {
+    // A contributed-but-unregistered command is not a type error: it fails at
+    // runtime with "command not found" the first time a user clicks it.
+    const source = readFileSync(path.resolve(__dirname, "..", "src", "extension.ts"), "utf8");
+    const registered = new Set(
+      [...source.matchAll(/registerCommand\(\s*"([^"]+)"/g)].map((match) => match[1]!),
+    );
+    const contributed = manifest.contributes.commands.map((command) => command.command);
+
+    for (const command of contributed) {
+      expect(registered.has(command), `${command} is contributed but never registered`).toBe(true);
+    }
+    for (const command of registered) {
+      expect(
+        contributed.includes(command),
+        `${command} is registered but never contributed, so it is unreachable`,
+      ).toBe(true);
+    }
+  });
+
+  it("only points menus at commands that exist", () => {
+    const contributed = new Set(manifest.contributes.commands.map((command) => command.command));
+    const menus: Record<string, { command: string }[]> = manifest.contributes.menus;
+    for (const [menu, entries] of Object.entries(menus)) {
+      for (const entry of entries) {
+        expect(contributed.has(entry.command), `${menu}: ${entry.command}`).toBe(true);
+      }
+    }
+  });
+
   it("opens the diagram editor by default for .mo files", () => {
     const editor = manifest.contributes.customEditors[0]!;
     expect(editor.viewType).toBe("modelicaStudio.diagram");

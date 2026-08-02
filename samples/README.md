@@ -52,11 +52,11 @@ model, so the sample directory itself stays sources-only.
 `run-sample.mos` does not just check that the model compiles. It reads the
 result file back and asserts the physics:
 
-| Assertion | Meaning |
-| --- | --- |
-| `tracking` | shaft speed is within 2 rad/s of the 120 rad/s command before the disturbance |
-| `rejection` | the loop returns to the command after the 0.6 s load torque step |
-| `alive` | the drive actually drew armature current, so this is not a trivially dead model |
+| Assertion   | Meaning                                                                         |
+| ----------- | ------------------------------------------------------------------------------- |
+| `tracking`  | shaft speed is within 2 rad/s of the 120 rad/s command before the disturbance   |
+| `rejection` | the loop returns to the command after the 0.6 s load torque step                |
+| `alive`     | the drive actually drew armature current, so this is not a trivially dead model |
 
 The script prints the sampled times alongside the values, so it cannot silently
 assert against the wrong point on the trajectory. It also reads the point count

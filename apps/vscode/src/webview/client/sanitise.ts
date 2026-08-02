@@ -51,7 +51,10 @@ export function sanitiseSvg(root: Element): void {
 function isSafeUrl(value: string): boolean {
   // Control characters are stripped before comparison because `java\nscript:`
   // and `java\u0000script:` are both parsed as `javascript:` by browsers.
+  // Matching control characters is the point here: stripping them is what stops
+  // them hiding a scheme, so the rule is disabled for this line only.
   const url = value
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u0020]/g, "")
     .trim()
     .toLowerCase();

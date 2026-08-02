@@ -191,7 +191,7 @@ each component's icon, applies its `Placement` transform, and decodes every
 component over layered `components` / `connections`.
 
 **The slice's real finding:** a fully green test suite still rendered the voltage
-source as a bare stub. `getIconAnnotation` returns a class's *own* layer only,
+source as a bare stub. `getIconAnnotation` returns a class's _own_ layer only,
 and MSL builds most icons through `extends` — `StepVoltage`'s circle and `+`/`-`
 live two levels up the chain. `resolveIcon` now walks `getInheritedClasses`
 depth-first (base layers first, cycle-guarded, cached per class). Looking at the
@@ -360,7 +360,7 @@ have no consumer is documentation, not a contract.
    `docs/05-clean-room-and-licensing.md`. Now in README, with a test; the same
    test mechanically enforces the AGENTS.md identity rule (no `modex` in ids).
 
-New guard worth naming: *"styles every class the markup ships"* walks every
+New guard worth naming: _"styles every class the markup ships"_ walks every
 `class="..."` in the generated HTML and fails if the stylesheet has no rule for
 it — the check that would have caught defect 1 the day it landed.
 
@@ -390,7 +390,7 @@ pnpm vitest run -> 28 files, 192 tests, all passing
    spaces (`C:\Program Files\...`) and a bare `/` matching mid-word in
    `docs/04-visual-spec.md`.
 10. **Wheel handling was worse than first recorded** — it `preventDefault()`ed
-    *every* wheel event and zoomed on all of them, so trackpad two-finger scroll
+    _every_ wheel event and zoomed on all of them, so trackpad two-finger scroll
     zoomed and the canvas could not be panned at all. Now ctrl/cmd+wheel zooms
     (still prevented, or the webview font-zooms), plain wheel pans, shift+wheel
     pans horizontally. Verified with dispatched `WheelEvent`s in the harness.

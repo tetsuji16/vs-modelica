@@ -12,7 +12,7 @@ The reference was re-read from the public listing rather than from memory, and
 both product screenshots were examined for canvas treatment. Then the shipped
 artefacts — `media/diagram.css` and `buildDiagramHtml()`'s markup — were compared
 against the spec table, not against the source's intent. As in the previous
-review, the question asked of every claim was *what does the user actually see*.
+review, the question asked of every claim was _what does the user actually see_.
 
 ## The pattern behind most of these defects
 
@@ -32,8 +32,8 @@ contract. Every fix below is now anchored by a test that reads the spec's value.
 ### 1. The canvas chrome was entirely unstyled
 
 Not "slightly off" — absent. No rail styling, no mode-control styling, no status
-row styling. Against the spec row *"Left floating tool rail — 46 px wide controls
-(±3 px)"*, the rail was an inline-flow `<nav>` of default buttons that also stole
+row styling. Against the spec row _"Left floating tool rail — 46 px wide controls
+(±3 px)"_, the rail was an inline-flow `<nav>` of default buttons that also stole
 horizontal space from the drawing area, so it shifted the diagram rather than
 floating over it.
 
@@ -44,7 +44,7 @@ browser after the fix: **46.0 px**.
 
 ### 2. No grid
 
-Spec: *"1 px major/minor grid derived from Modelica coordinate scale and zoom."*
+Spec: _"1 px major/minor grid derived from Modelica coordinate scale and zoom."_
 There was none.
 
 The subtlety is where the grid lives. Drawn inside the scaled stage, its 1 px
@@ -63,8 +63,8 @@ noise, not guidance.
 
 ### 3. The drawing sheet inherited the theme, which breaks dark mode
 
-Spec: *"Diagram sheet — centered white/raised working extent"*, with
-*"neutral editor background outside the sheet."* There was no sheet at all: the
+Spec: _"Diagram sheet — centered white/raised working extent"_, with
+_"neutral editor background outside the sheet."_ There was no sheet at all: the
 SVG was drawn straight onto `--mso-bg` (= `editor.background`).
 
 This is worse than a cosmetic gap. Modelica annotation colours are **model data**
@@ -75,16 +75,16 @@ neutral chrome.
 
 Fixed with `--mso-sheet-bg: #ffffff` on the extent and `--mso-canvas-bg` outside.
 
-This deliberately breaks the old rule *"every token maps to a VS Code theme
-variable."* Rather than delete that test, it now enumerates the three
+This deliberately breaks the old rule _"every token maps to a VS Code theme
+variable."_ Rather than delete that test, it now enumerates the three
 surface-colour exceptions and a second test asserts the exception set is exactly
-those three — so a *new* hard-coded colour still fails. The rule was right; it
+those three — so a _new_ hard-coded colour still fails. The rule was right; it
 just needed a stated, bounded exception instead of being silently dropped.
 
 ### 4. Only one segmented row top right, where the spec says two
 
-Spec: *"Top-right mode controls — two segmented rows (±4 px)"*, groups being
-*"view mode, route/settings, run, and run-menu."* Only the view-mode row existed;
+Spec: _"Top-right mode controls — two segmented rows (±4 px)"_, groups being
+_"view mode, route/settings, run, and run-menu."_ Only the view-mode row existed;
 the run group was missing entirely. Added as a second row, disabled like the
 other not-yet-implemented tools, so the layout is honest about its state rather
 than absent.
@@ -92,23 +92,23 @@ than absent.
 ### 5. Opening a `.mo` file did not open the diagram editor
 
 `customEditors[0].priority` was `"option"`. The reference behaviour, stated
-plainly on the listing, is *"Open any .mo file — the Modex Diagram Editor opens
-by default."* With `"option"`, the graphical editor is reachable only through
+plainly on the listing, is _"Open any .mo file — the Modex Diagram Editor opens
+by default."_ With `"option"`, the graphical editor is reachable only through
 **Reopen With…**, which is a different product. Changed to `"default"`; the
 manifest test that asserted `"option"` was rewritten to state the new contract
 and why.
 
 ### 6. High-contrast regression risk in the new chrome
 
-Spec: *"no decorative shadow in high contrast."* The raised sheet needs a shadow
+Spec: _"no decorative shadow in high contrast."_ The raised sheet needs a shadow
 to read as raised, which is exactly the decoration forced-colours mode should
 drop. The shadow is confined to `@media not (forced-colors: active)`; the 1 px
 border that carries the meaning is unconditional.
 
 ### 7. The non-affiliation disclaimer shipped nowhere
 
-`docs/05-clean-room-and-licensing.md` requires: *"Modelica Studio OSS is an
-independent project and is not affiliated with or endorsed by Modex…"* That
+`docs/05-clean-room-and-licensing.md` requires: _"Modelica Studio OSS is an
+independent project and is not affiliated with or endorsed by Modex…"_ That
 sentence existed **only inside that document**, which no user opens. The README
 — the artefact people actually read, and the basis of a future Marketplace page —
 did not carry it.
@@ -142,7 +142,7 @@ Browser, against the generated shell and the generated stylesheet: rail 46.0 px,
 sheet white with major/minor grid, grid pitch tracking zoom at exactly 1.2× per
 step, two segmented rows top right, whole circuit visible and centred.
 
-One new test is worth calling out: *"styles every class the markup ships"* walks
+One new test is worth calling out: _"styles every class the markup ships"_ walks
 every `class="…"` in the generated HTML and fails if the stylesheet has no rule
 for it. That is the check that would have caught defect 1 on the day it landed.
 

@@ -164,7 +164,7 @@ assertion in the suite was green.
 
 `getElementAnnotations` is positional against `getComponents` and returns `{}` for
 non-graphical elements, so parameters are skipped silently — they are not missing
-geometry, they have none. Anything that *should* have rendered and could not is
+geometry, they have none. Anything that _should_ have rendered and could not is
 pushed to `scene.unsupported`: a component whose icon the compiler cannot resolve,
 or a `connect` equation with no `Line` annotation. A route is never guessed,
 because a guessed wire is a wire the model does not contain.

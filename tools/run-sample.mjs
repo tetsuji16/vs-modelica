@@ -62,7 +62,11 @@ const code = await new Promise((done) => child.on("close", done));
 
 // omc exits 0 even when a script statement fails, so the transcript is the
 // only reliable signal.
-if (output.includes("SAMPLE OK") && !output.includes("FAILED") && !output.includes("Execution failed")) {
+if (
+  output.includes("SAMPLE OK") &&
+  !output.includes("FAILED") &&
+  !output.includes("Execution failed")
+) {
   console.log("sample: OK");
   process.exit(0);
 }

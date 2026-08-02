@@ -158,6 +158,30 @@
         "command": "modelicaStudio.revealClass",
         "title": "Reveal Class Source",
         "category": "Modelica Studio"
+      },
+      {
+        "command": "modelicaStudio.searchLibraries",
+        "title": "Search Loaded Classes",
+        "category": "Modelica Studio",
+        "icon": "$(search)"
+      },
+      {
+        "command": "modelicaStudio.clearLibrarySearch",
+        "title": "Clear Class Search",
+        "category": "Modelica Studio",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "modelicaStudio.searchModels",
+        "title": "Filter Workspace Models",
+        "category": "Modelica Studio",
+        "icon": "$(search)"
+      },
+      {
+        "command": "modelicaStudio.refreshViews",
+        "title": "Refresh Views",
+        "category": "Modelica Studio",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -178,6 +202,26 @@
           "command": "modelicaStudio.refreshLibraries",
           "when": "view == modelicaStudio.libraries",
           "group": "navigation@2"
+        },
+        {
+          "command": "modelicaStudio.searchLibraries",
+          "when": "view == modelicaStudio.libraries",
+          "group": "navigation@0"
+        },
+        {
+          "command": "modelicaStudio.clearLibrarySearch",
+          "when": "view == modelicaStudio.libraries",
+          "group": "navigation@3"
+        },
+        {
+          "command": "modelicaStudio.searchModels",
+          "when": "view == modelicaStudio.models",
+          "group": "navigation@0"
+        },
+        {
+          "command": "modelicaStudio.refreshViews",
+          "when": "view == modelicaStudio.models || view == modelicaStudio.elements",
+          "group": "navigation@1"
         }
       ],
       "commandPalette": [
@@ -198,6 +242,18 @@
         {
           "command": "modelicaStudio.revealClass",
           "when": "false"
+        },
+        {
+          "command": "modelicaStudio.searchLibraries"
+        },
+        {
+          "command": "modelicaStudio.clearLibrarySearch"
+        },
+        {
+          "command": "modelicaStudio.searchModels"
+        },
+        {
+          "command": "modelicaStudio.refreshViews"
         }
       ]
     },

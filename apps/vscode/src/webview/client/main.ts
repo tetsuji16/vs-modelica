@@ -11,7 +11,7 @@ import {
   type Viewport,
   type ViewportSize,
 } from "@modelica-studio/ui";
-import { isDiagramMessage, type DiagramMessage } from "../protocol.js";
+import { isDiagramMessage } from "../protocol.js";
 import { sanitiseSvg } from "./sanitise.js";
 
 /**
@@ -114,7 +114,9 @@ function showScene(svg: string, pixelSize: ViewportSize, label: string): void {
   stage!.replaceChildren(document.importNode(root, true));
   content = inkSize(pixelSize);
   sheet!.setAttribute("aria-label", label);
-  for (const button of Array.from(document.querySelectorAll<HTMLButtonElement>("[data-view-tool]"))) {
+  for (const button of Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-view-tool]"),
+  )) {
     button.disabled = false;
   }
   fit(true);
@@ -157,8 +159,7 @@ function inkSize(declared: ViewportSize): ViewportSize {
   const pxPerUnitY = declared.height / viewBox.height;
   // Ink that starts left of or above the viewBox origin would be cut off by the
   // stage corner, so the drawing is nudged back inside before it is scaled.
-  svg.style.transform =
-    `translate(${(viewBox.x - minX) * pxPerUnitX}px, ${(viewBox.y - minY) * pxPerUnitY}px)`;
+  svg.style.transform = `translate(${(viewBox.x - minX) * pxPerUnitX}px, ${(viewBox.y - minY) * pxPerUnitY}px)`;
   return { width: spanX * pxPerUnitX, height: spanY * pxPerUnitY };
 }
 

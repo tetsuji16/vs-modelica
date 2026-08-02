@@ -9,17 +9,17 @@ A whole diagram, not a single icon: every component of a class is placed with it
 own icon, transformed by its `Placement`, and wired with the routed polylines
 taken from the `connect` equations' `Line` annotations.
 
-| Layer | File | Responsibility |
-|---|---|---|
-| Port | `packages/modelica/src/scene/builder.ts` (`AnnotationSource`) | The eight raw compiler replies the builder needs, so composition is testable without a compiler |
-| Composition | same file (`buildDiagramScene`, `resolveIcon`) | Components, placements, inheritance, connections → one `Scene` |
-| Rendering | `packages/ui/src/render/scene.ts` (`renderSceneGraph`) | `Scene` → SVG, one group per component, layered `components` / `connections` |
-| Adapter | `apps/vscode/src/annotationSource.ts` | Binds a live `OmcSession` to the port |
+| Layer       | File                                                          | Responsibility                                                                                  |
+| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Port        | `packages/modelica/src/scene/builder.ts` (`AnnotationSource`) | The eight raw compiler replies the builder needs, so composition is testable without a compiler |
+| Composition | same file (`buildDiagramScene`, `resolveIcon`)                | Components, placements, inheritance, connections → one `Scene`                                  |
+| Rendering   | `packages/ui/src/render/scene.ts` (`renderSceneGraph`)        | `Scene` → SVG, one group per component, layered `components` / `connections`                    |
+| Adapter     | `apps/vscode/src/annotationSource.ts`                         | Binds a live `OmcSession` to the port                                                           |
 
 ## The bug the evidence caught
 
 The first composition passed all four integration assertions — 11 components, 16
-connections, no `NaN`, baseline stable. Rendering the baseline and *looking at it*
+connections, no `NaN`, baseline stable. Rendering the baseline and _looking at it_
 showed the voltage source drawn as a bare stub. The compiler explains why:
 
 ```
@@ -48,7 +48,7 @@ A green test suite did not catch this. Looking at the picture did.
   indistinguishable otherwise.
 - **`getElementAnnotations` is positional.** It returns one entry per
   `getComponents` row, `{}` for non-graphical elements. Parameters legitimately
-  have no `Placement`, so they are skipped silently; anything that *should* have
+  have no `Placement`, so they are skipped silently; anything that _should_ have
   rendered and could not is pushed to `scene.unsupported` instead.
 - **Mirroring is encoded as a reversed extent.** `extent[0].x > extent[1].x`
   means flip horizontally; the component transform derives flips from the sign of

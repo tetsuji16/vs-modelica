@@ -741,7 +741,9 @@ ${body}
     stage.replaceChildren(document.importNode(root, true));
     content = inkSize(pixelSize);
     sheet.setAttribute("aria-label", label);
-    for (const button of Array.from(document.querySelectorAll("[data-view-tool]"))) {
+    for (const button of Array.from(
+      document.querySelectorAll("[data-view-tool]")
+    )) {
       button.disabled = false;
     }
     fit(true);

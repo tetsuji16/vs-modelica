@@ -6,7 +6,9 @@ import { DiagnosticsPublisher, classNameOf } from "./diagnostics.js";
 import { renderEnvironmentReport } from "./environmentReport.js";
 import { OmcService } from "./omcService.js";
 import { HealthStatusItem } from "./statusBar.js";
+import { ElementsTreeProvider } from "./views/elementsTree.js";
 import { LibrariesTreeProvider } from "./views/librariesTree.js";
+import { ModelsTreeProvider } from "./views/modelsTree.js";
 import { SectionTreeProvider } from "./views/sectionTree.js";
 
 const PRODUCT = "Modelica Studio OSS";
@@ -26,14 +28,26 @@ export function activate(context: vscode.ExtensionContext): void {
     health.setEnvironment((await omc.getEnvironment()).status);
   };
   void refreshHealth();
+  context.subscriptions.push(vscode.languages.onDidChangeDiagnostics(() => health.refresh()));
+
+  const models = new ModelsTreeProvider(omc);
+  const elements = new ElementsTreeProvider(omc);
   context.subscriptions.push(
-    vscode.languages.onDidChangeDiagnostics(() => health.refresh()),
+    models,
+    elements,
+    vscode.window.registerTreeDataProvider("modelicaStudio.libraries", libraries),
+    vscode.window.registerTreeDataProvider("modelicaStudio.models", models),
+    vscode.window.registerTreeDataProvider("modelicaStudio.elements", elements),
   );
 
-  context.subscriptions.push(
-    vscode.window.registerTreeDataProvider("modelicaStudio.libraries", libraries),
-  );
-  for (const section of SIDEBAR_SECTIONS.filter((s) => s.id !== "modelicaStudio.libraries")) {
+  // The remaining sections are still placeholders; listing the implemented ones
+  // here keeps a shell from being registered over a real provider.
+  const implemented = new Set([
+    "modelicaStudio.libraries",
+    "modelicaStudio.models",
+    "modelicaStudio.elements",
+  ]);
+  for (const section of SIDEBAR_SECTIONS.filter((s) => !implemented.has(s.id))) {
     const provider = new SectionTreeProvider(section);
     context.subscriptions.push(
       provider,
@@ -45,7 +59,47 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     omc.onDidChange(() => {
       libraries.refresh();
+      models.refresh();
+      elements.refresh();
       void refreshHealth();
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("modelicaStudio.searchLibraries", async () => {
+      const query = await vscode.window.showInputBox({
+        title: `${PRODUCT}: search loaded classes`,
+        prompt: "Name or dotted path fragment, e.g. el.an.resistor",
+        value: libraries.activeFilter,
+        placeHolder: "Leave empty to show the full hierarchy",
+      });
+      // Cancelling must not clear an existing filter; only an empty submission
+      // does, which is the documented way to get the hierarchy back.
+      if (query === undefined) {
+        return;
+      }
+      libraries.setFilter(query);
+    }),
+
+    vscode.commands.registerCommand("modelicaStudio.clearLibrarySearch", () => {
+      libraries.setFilter("");
+    }),
+
+    vscode.commands.registerCommand("modelicaStudio.searchModels", async () => {
+      const query = await vscode.window.showInputBox({
+        title: `${PRODUCT}: filter workspace models`,
+        prompt: "File name fragment",
+      });
+      if (query === undefined) {
+        return;
+      }
+      models.setFilter(query);
+    }),
+
+    vscode.commands.registerCommand("modelicaStudio.refreshViews", () => {
+      libraries.refresh();
+      models.refresh();
+      elements.refresh();
     }),
   );
 

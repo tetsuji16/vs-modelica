@@ -137,9 +137,7 @@ describe("panBy", () => {
 
 describe("presentation helpers", () => {
   it("emits a CSS transform with translate before scale", () => {
-    expect(toCssTransform({ scale: 2, x: 10, y: -5 })).toBe(
-      "translate(10px, -5px) scale(2)",
-    );
+    expect(toCssTransform({ scale: 2, x: 10, y: -5 })).toBe("translate(10px, -5px) scale(2)");
   });
 
   it("rounds the transform so identical viewports produce identical strings", () => {

@@ -41,10 +41,7 @@ export const PROTOCOL_VERSION = 1;
 
 /** Narrows an unknown value received from a webview to the ready handshake. */
 export function isWebviewReady(message: unknown): message is WebviewReadyMessage {
-  return (
-    isVersionedMessage(message) &&
-    (message as { type?: unknown }).type === "webview/ready"
-  );
+  return isVersionedMessage(message) && (message as { type?: unknown }).type === "webview/ready";
 }
 
 /**

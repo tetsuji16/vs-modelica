@@ -49,7 +49,10 @@ describe("extent geometry baseline", () => {
     // The property a screenshot pair would show: one zoom click multiplies the
     // ruling by 1.2. A fixed screen-space pattern would fail this.
     const before = extentGeometry(fitViewport(content, viewport), content);
-    const after = extentGeometry(zoomBy(fitViewport(content, viewport), ZOOM_STEP, viewport), content);
+    const after = extentGeometry(
+      zoomBy(fitViewport(content, viewport), ZOOM_STEP, viewport),
+      content,
+    );
     expect(after.majorPx / before.majorPx).toBeCloseTo(ZOOM_STEP, 10);
     expect(after.minorPx / before.minorPx).toBeCloseTo(ZOOM_STEP, 10);
   });
@@ -62,7 +65,10 @@ describe("extent geometry baseline", () => {
   });
 
   it("drops the minor ruling once it is too dense to read", () => {
-    const dense = extentGeometry({ scale: GRID_MINOR_MIN_PX / GRID_MINOR_STEP / 2, x: 0, y: 0 }, content);
+    const dense = extentGeometry(
+      { scale: GRID_MINOR_MIN_PX / GRID_MINOR_STEP / 2, x: 0, y: 0 },
+      content,
+    );
     expect(dense.minorVisible).toBe(false);
     // Major ruling survives, so the sheet keeps a sense of scale.
     expect(dense.majorPx).toBeGreaterThan(0);
