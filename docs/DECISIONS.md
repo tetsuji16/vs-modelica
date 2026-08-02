@@ -44,6 +44,41 @@ Start with a renderer-independent scene graph and SVG presentation. Modelica gra
 
 Support Ollama local endpoints and OpenRouter remote API behind one streaming/tool interface. All model mutations become typed proposals, validated by the host and accepted by the user before application.
 
+## ADR-010: ZeroMQ transport via the `zeromq` npm binding
+
+- Status: accepted
+- Date: 2026-08-02
+
+`omc --interactive=zmq` is the documented, stable control channel; the alternative
+(`--interactive=corba`) requires an ORB and is legacy. Options considered for the client:
+(a) the `zeromq` npm package with prebuilt native bindings, (b) an independently written
+sidecar process, (c) re-implementing the ZMTP framing in pure TypeScript.
+
+(a) is chosen: it is MIT-licensed, contains no OpenModelica code, and speaks only the public
+ZeroMQ protocol, so the clean-room position is unaffected. (c) was rejected as unjustified
+protocol work; (b) remains the fallback if prebuilt bindings become unavailable for a target
+platform. Consequence: the VSIX carries a prebuilt native binding, recorded in
+`docs/DEPENDENCIES.md`, and packaging must ship the per-platform binding.
+
+Measured on OpenModelica v1.27.0 (64-bit), Windows 10: startup to first reply < 2 s,
+1,000 sequential `getVersion()` round trips in 3.4 s (~3.4 ms/call), no desynchronisation.
+
+## ADR-011: strict request serialisation and allowlisted scripting calls
+
+- Status: accepted
+- Date: 2026-08-02
+
+A ZeroMQ REQ socket has a lock-step REQ/REP state machine: a timed-out request that later
+receives its reply would desynchronise every subsequent call. The transport therefore
+serialises all requests through a promise queue, and on timeout it destroys the socket and
+marks the session crashed instead of reusing it; `OmcService` restarts the session once and
+retries the operation.
+
+Independently, `OmcSession` exposes only an allowlist of read-only scripting functions.
+`system`, `writeFile`, `runScript` and every mutating API are deliberately absent, so neither a
+bug nor a hostile AI proposal can turn the compiler session into an arbitrary shell. Arguments
+are typed and encoded (identifiers validated, strings escaped), never concatenated as text.
+
 ## ADR-008: deterministic vector visual baselines before pixel baselines
 
 - Status: accepted

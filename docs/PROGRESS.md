@@ -72,14 +72,59 @@ Implemented behaviour:
 - The webview receives no secrets, no filesystem paths beyond `media/` resource URIs.
 - No OpenModelica code was inspected, copied, linked or bundled.
 
+---
+
+## 2026-08-02 (later) — Phase 1 complete
+
+### Verified commands
+
+```text
+pnpm check        -> clean (eslint + prettier + tsc across 4 projects)
+pnpm test         -> 16 files, 75 tests, all passing
+pnpm test:visual  -> 4 baselines verified
+node tools/ci/assert-no-bundled-omc.mjs -> clean-room check passed
+omc --version        => OpenModelica v1.27.0 (64-bit)
+session getVersion() => OpenModelica v1.27.0 (64-bit)
+```
+
+### Phase 1 — remaining slices (gate: **pass**, `docs/gate-reports/phase-1.md`)
+
+| Task                                                                | Status | Files                                                                                  |
+| ------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
+| Spike/package/supervise ZMQ transport                               | done   | `packages/omc/src/session/transport.ts`                                                |
+| Scripting codec, capability probe, timeouts, cancellation, recovery | done   | `packages/omc/src/session/{codec,session}.ts`, `apps/vscode/src/omcService.ts`         |
+| load/check/class outline and Problems diagnostics                   | done   | `apps/vscode/src/{diagnostics,extension}.ts`, `apps/vscode/src/views/librariesTree.ts` |
+| Modelica grammar and language configuration                         | done   | `apps/vscode/language/*`                                                               |
+| Fixtures for the syntax suite                                       | done   | `fixtures/syntax/{MinimalModel,BrokenModel}.mo`                                        |
+
+Transport facts measured against the installed compiler (recorded in ADR-010):
+
+- omc prints `Dumped server port in file: <path>`; that file holds `tcp://127.0.0.1:<port>`.
+  The transport reads the endpoint from stdout _and_ by polling, so it never guesses a port
+  or races a fixed sleep.
+- Each session gets a unique `-z=<suffix>` and its own temporary working directory, so parallel
+  sessions and parallel tests cannot collide.
+- 1,000 sequential `getVersion()` calls in 3.4 s with no desynchronisation; the live suite also
+  runs 300 sequential and 50 concurrent mixed calls.
+
+Security posture added in this slice:
+
+- read-only scripting allowlist (`system`, `writeFile`, `runScript` deliberately absent);
+- identifiers validated and strings escaped before encoding — no scripting-text concatenation;
+- REQ/REP strictly serialised; on timeout the socket is destroyed and the session restarted
+  once, rather than reused in a desynchronised state (ADR-011);
+- diagnostics never invent a source range.
+
+New runtime dependency: `zeromq` ^6.5.0 (MIT), recorded in `docs/DEPENDENCIES.md` with its
+native-binary status. It contains no OpenModelica code, so the clean-room position is unchanged.
+
 ### Next slice (recommended order)
 
-1. **Phase 1 slice 2** — ZMQ transport spike: launch `omc --interactive=zmq` with a unique
-   suffix and per-session temp directory, read the endpoint file without racing startup,
-   and run the 10,000-sequential-call desynchronisation test from
-   `docs/06-openmodelica-integration.md` section 2. Decide the ZeroMQ packaging strategy
-   (native Node binding vs. independently written sidecar) in a new ADR before coding.
-2. **Phase 1 slice 3** — typed scripting codec plus capability handshake over that transport.
-3. **Phase 1 slice 4** — `loadFile`/`checkModel` diagnostics into the Problems panel, using the
-   `fixtures/syntax` suite, plus the Modelica grammar and language configuration.
-4. Produce `docs/gate-reports/phase-1.md` before starting phase 2.
+1. **Phase 2 slice 1** — define the annotation and scene-graph contracts in
+   `packages/contracts`, then decode `getIconAnnotation` / `getDiagramAnnotation`
+   (coordinate systems, `Placement`, primitives) in `packages/modelica` with fixture-first tests.
+2. **Phase 2 slice 2** — render the scene graph to SVG in the diagram webview with pan/zoom/fit,
+   and add pinned-Chromium pixel baselines (supersedes ADR-008).
+3. **Phase 2 slice 3** — connections and inheritance, then the Libraries/Models/Elements trees
+   with search, and the reference DC motor fixture.
+4. Produce `docs/gate-reports/phase-2.md` before starting phase 3.

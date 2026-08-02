@@ -1,0 +1,155 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Modelica",
+  "scopeName": "source.modelica",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#annotation"
+    },
+    {
+      "include": "#classDefinition"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#builtinTypes"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#functionCall"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.modelica",
+          "begin": "//",
+          "end": "$"
+        },
+        {
+          "name": "comment.block.modelica",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.modelica",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.modelica",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "annotation": {
+      "patterns": [
+        {
+          "name": "meta.annotation.modelica",
+          "match": "\\b(annotation)\\b",
+          "captures": {
+            "1": {
+              "name": "keyword.other.annotation.modelica"
+            }
+          }
+        }
+      ]
+    },
+    "classDefinition": {
+      "patterns": [
+        {
+          "match": "\\b(model|package|class|block|connector|record|function|type|operator|expandable\\s+connector)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.other.classtype.modelica"
+            },
+            "2": {
+              "name": "entity.name.type.class.modelica"
+            }
+          }
+        },
+        {
+          "match": "\\b(end)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.control.modelica"
+            },
+            "2": {
+              "name": "entity.name.type.class.modelica"
+            }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.modelica",
+          "match": "\\b(algorithm|and|break|equation|elseif|elsewhen|else|encapsulated|end|enumeration|extends|external|final|flow|stream|for|if|import|in|initial|inner|input|loop|not|operator|or|outer|output|parameter|partial|protected|public|redeclare|replaceable|return|then|when|while|within|constrainedby|discrete|each|constant)\\b"
+        }
+      ]
+    },
+    "builtinTypes": {
+      "patterns": [
+        {
+          "name": "support.type.primitive.modelica",
+          "match": "\\b(Real|Integer|Boolean|String|StateSelect|ExternalObject|Clock)\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.modelica",
+          "match": "\\b(true|false|time|pi|der|pre|edge|change|reinit|terminate|assert|noEvent|smooth|sample|initial|terminal)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.modelica",
+          "match": "\\b\\d+(\\.\\d*)?([eE][+-]?\\d+)?\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.modelica",
+          "match": "(:=|==|<>|<=|>=|<|>|\\+|-|\\*|/|\\^|\\.\\+|\\.-|\\.\\*|\\./|\\.\\^|=)"
+        }
+      ]
+    },
+    "functionCall": {
+      "patterns": [
+        {
+          "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+          "name": "entity.name.function.modelica"
+        }
+      ]
+    }
+  }
+}

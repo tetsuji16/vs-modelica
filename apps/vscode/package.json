@@ -27,7 +27,19 @@
         ],
         "extensions": [
           ".mo"
-        ]
+        ],
+        "configuration": "./language/modelica-language-configuration.json",
+        "icon": {
+          "light": "./media/activity-bar.svg",
+          "dark": "./media/activity-bar.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "modelica",
+        "scopeName": "source.modelica",
+        "path": "./language/modelica.tmLanguage.json"
       }
     ],
     "viewsContainers": {
@@ -74,7 +86,7 @@
       },
       {
         "view": "modelicaStudio.models",
-        "contents": "No Modelica models were found in this workspace."
+        "contents": "No Modelica models were found in this workspace.\n[Open Diagram](command:modelicaStudio.open)"
       },
       {
         "view": "modelicaStudio.results",
@@ -117,6 +129,35 @@
         "title": "Show Environment Status",
         "category": "Modelica Studio",
         "icon": "$(server-environment)"
+      },
+      {
+        "command": "modelicaStudio.checkModel",
+        "title": "Check Model",
+        "category": "Modelica Studio",
+        "icon": "$(check)"
+      },
+      {
+        "command": "modelicaStudio.loadLibrary",
+        "title": "Load Library",
+        "category": "Modelica Studio",
+        "icon": "$(library)"
+      },
+      {
+        "command": "modelicaStudio.refreshLibraries",
+        "title": "Refresh Libraries",
+        "category": "Modelica Studio",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "modelicaStudio.restartCompiler",
+        "title": "Restart Compiler Session",
+        "category": "Modelica Studio",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "modelicaStudio.revealClass",
+        "title": "Reveal Class Source",
+        "category": "Modelica Studio"
       }
     ],
     "menus": {
@@ -127,13 +168,36 @@
           "group": "navigation"
         }
       ],
+      "view/title": [
+        {
+          "command": "modelicaStudio.loadLibrary",
+          "when": "view == modelicaStudio.libraries",
+          "group": "navigation@1"
+        },
+        {
+          "command": "modelicaStudio.refreshLibraries",
+          "when": "view == modelicaStudio.libraries",
+          "group": "navigation@2"
+        }
+      ],
       "commandPalette": [
         {
           "command": "modelicaStudio.open",
           "when": "resourceLangId == modelica"
         },
         {
+          "command": "modelicaStudio.checkModel",
+          "when": "resourceLangId == modelica"
+        },
+        {
           "command": "modelicaStudio.showEnvironment"
+        },
+        {
+          "command": "modelicaStudio.restartCompiler"
+        },
+        {
+          "command": "modelicaStudio.revealClass",
+          "when": "false"
         }
       ]
     },
@@ -150,6 +214,17 @@
           "default": 30000,
           "minimum": 1000,
           "description": "Timeout for the OpenModelica version handshake in milliseconds."
+        },
+        "modelicaStudio.omc.requestTimeoutMs": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 1000,
+          "description": "Timeout for a single OpenModelica scripting call in milliseconds."
+        },
+        "modelicaStudio.diagnostics.checkOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run loadFile and checkModel when a Modelica file is saved."
         },
         "modelicaStudio.ai.provider": {
           "type": "string",

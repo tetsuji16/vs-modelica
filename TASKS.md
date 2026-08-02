@@ -14,14 +14,14 @@ implemented and verified lives in [docs/PROGRESS.md](./docs/PROGRESS.md).
 - [x] Add dependency/provenance/PR templates and security policy.
 - [x] Produce phase-0 gate report.
 
-## Phase 1
+## Phase 1 — gate passed, see [docs/gate-reports/phase-1.md](./docs/gate-reports/phase-1.md)
 
 - [x] Implement OMC resolution and >=1.27 version report.
-- [ ] Spike/package/supervise ZMQ transport.
-- [ ] Implement scripting codec, capability probe, timeouts, cancellation, recovery.
-- [ ] Implement load/check/class outline and Problems diagnostics.
-- [ ] Add Modelica grammar/language configuration and fixtures.
-- [ ] Produce phase-1 gate report.
+- [x] Spike/package/supervise ZMQ transport.
+- [x] Implement scripting codec, capability probe, timeouts, cancellation, recovery.
+- [x] Implement load/check/class outline and Problems diagnostics.
+- [x] Add Modelica grammar/language configuration and fixtures.
+- [x] Produce phase-1 gate report.
 
 ## Phase 2
 

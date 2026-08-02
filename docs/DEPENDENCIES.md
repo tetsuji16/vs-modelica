@@ -15,5 +15,11 @@ Every third-party package requires an entry before it is merged (AGENTS.md secti
 
 ## Runtime dependencies
 
-None yet. The extension currently ships only original TypeScript and its own media assets.
-OpenModelica is an external, user-installed runtime and is never bundled or linked.
+| Package | Version | License | Source                               | Reason                                                               | Bundled in VSIX               |
+| ------- | ------- | ------- | ------------------------------------ | -------------------------------------------------------------------- | ----------------------------- |
+| zeromq  | ^6.5.0  | MIT     | https://www.npmjs.com/package/zeromq | ZeroMQ REQ client for the supervised `omc --interactive=zmq` session | yes (prebuilt native binding) |
+
+`zeromq` ships prebuilt native bindings (`*.node`) for the platforms the VSIX targets. It is a
+generic ZeroMQ binding: it contains no OpenModelica code, and it speaks only the documented
+public ZeroMQ wire protocol, so it does not affect the clean-room position (ADR-010).
+OpenModelica itself remains an external, user-installed runtime and is never bundled or linked.
