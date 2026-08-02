@@ -407,3 +407,132 @@ pnpm -r check   -> 5 projects, 0 errors
 pnpm vitest run -> 30 files, 209 tests, all passing
 browser         -> rail 46.0px, sheet rgb(255,255,255), grid 83.49/8.35 ratio 10
 ```
+
+---
+
+## 2026-08-03 — End-to-end sample, sidebar trees (Libraries search, Models, Elements)
+
+### Verified commands
+
+```text
+pnpm lint         -> clean (config repaired, see below)
+pnpm format:check -> clean
+pnpm check        -> 5 projects, 0 errors
+pnpm test         -> 31 files, 226 tests, all passing
+pnpm test:visual  -> 4 baseline(s) verified
+pnpm sample       -> SAMPLE OK (OpenModelica v1.27.0, real simulation)
+```
+
+### Slice A — end-to-end sample (gate: **pass**)
+
+| Task                                          | Status | Files                                     |
+| --------------------------------------------- | ------ | ----------------------------------------- |
+| Non-trivial sample model                      | done   | `samples/SpeedControlledDCMotorDrive.mo`  |
+| Scripted check + simulate + result assertions | done   | `samples/run-sample.mos`                  |
+| Runner reusing the extension's OMC resolution | done   | `tools/run-sample.mjs`, `pnpm sample`     |
+| CI job with a real compiler                   | done   | `.github/workflows/ci.yml` (`sample` job) |
+| Sample documentation                          | done   | `samples/README.md`                       |
+
+The model is a speed-controlled permanent-magnet DC drive: a limited PI
+controller drives an inverter lag on the armature voltage of an MSL
+`Electrical.Machines` DC machine, with a load inertia and a torque step at
+0.6 s. It was chosen over a resistor-and-source circuit deliberately — it spans
+four MSL packages, mixes causal signal connections with acausal electrical and
+rotational ones, uses rotated placements and a non-default diagram extent, so
+it exercises annotation-decoder paths a trivial example never reaches.
+
+It asserts behaviour, not just compilation: `tracking` (within 2 rad/s of the
+120 rad/s command before the disturbance), `rejection` (returns to command after
+the load step) and `alive` (armature current actually flowed, so the model is
+not trivially dead).
+
+Findings worth keeping:
+
+- **`omc` exits 0 even when a script statement fails.** The runner therefore
+  treats the transcript as the signal and requires `SAMPLE OK`. An exit-code
+  check alone would have passed while the assertions were failing.
+- **`readSimulationResult` must not assume `numberOfIntervals + 1` points.** The
+  solver emits event points on top of the uniform grid; the script reads
+  `readSimulationResultSize` instead. The first version failed with a dimension
+  mismatch.
+- **Writing `resolveEnvironment(candidates, probe)` type-checked in JS and threw
+  at runtime** — the real signature is `(probe, settingPath?, candidates?)`.
+  This is exactly the resolver the extension uses, so the sample now covers it.
+- **The original PI gains (`k=0.6`, `Ti=0.08`) were too slow** — 116.1 rad/s at
+  the 0.55 s sample point. The gains were raised rather than the tolerance
+  loosened, because a tolerance wide enough to pass would not have distinguished
+  tracking from drifting.
+- The sample prints the sampled _times_ next to the values, so it cannot
+  silently assert against the wrong point on the trajectory.
+- OMC generates dozens of C files, a makefile and an executable next to the
+  model. The script `cd`s into `samples/build/` (git-ignored) after loading, so
+  the sample directory stays sources-only.
+
+Local process failure worth recording: `git clean -fdx` was run inside
+`samples/` while the new sources were still untracked, and deleted them. They
+were rewritten and committed immediately. Commit before cleaning.
+
+### Slice B — sidebar trees (gate: **pass**)
+
+| Task                                      | Status | Files                                                          |
+| ----------------------------------------- | ------ | -------------------------------------------------------------- |
+| Class-name matching and ranking           | done   | `apps/vscode/src/views/match.ts`                               |
+| Libraries search / clear filter           | done   | `apps/vscode/src/views/librariesTree.ts`                       |
+| Models tree over workspace `.mo` files    | done   | `apps/vscode/src/views/modelsTree.ts`                          |
+| Elements tree following the active editor | done   | `apps/vscode/src/views/elementsTree.ts`                        |
+| Commands, menus, wiring                   | done   | `apps/vscode/src/extension.ts`, `apps/vscode/package.json`     |
+| Tests                                     | done   | `apps/vscode/test/match.test.ts` (15), `manifest.test.ts` (+2) |
+
+Behaviour and the reasoning behind it:
+
+- **Matching is dot-segmented.** `el.an.res` matches
+  `Modelica.Electrical.Analog.Basic.Resistor`: each dotted piece must be found,
+  in order, in a _later_ segment than the last. Modelica names are long and
+  share prefixes, so a plain substring filter returns hundreds of equally
+  ranked hits.
+- **Ranking tiers**: exact leaf > leaf prefix > leaf substring > ancestor-path
+  match. Length only breaks ties within a tier (`19 / (1 + len)`), so a short
+  name can never overtake a better-quality match.
+- **Search flattens the tree.** A hierarchy is the wrong shape for results whose
+  purpose is reaching a class without knowing its path. The walk is bounded on
+  three axes — depth 6, 4000 visits, 200 results — because this runs against a
+  live compiler over IPC and MSL is tens of thousands of classes.
+- **Cancelling the search box does not clear an active filter**; only submitting
+  an empty string does, which is also what the Clear command does.
+- **Models lists workspace files, not compiler state**, so the view is populated
+  before OMC is ready and stays useful when it is missing. Only the classes
+  inside a file need a session. A `FileSystemWatcher` refreshes on create/delete.
+- **Elements follows the active editor**, debounced 150 ms, and ignores
+  non-Modelica editors rather than blanking — switching to an output channel
+  should not clear what you were inspecting.
+- **Empty views return `[]` rather than a placeholder row.** Each section's
+  empty state is specified once in `SIDEBAR_SECTIONS` and rendered by
+  `viewsWelcome`; a fake tree item would both duplicate and outrank it.
+
+Two new manifest tests earn their place: every contributed command must be
+registered in `extension.ts` and vice versa, and every menu entry must point at
+a command that exists. Neither is a type error — both fail at runtime with
+"command not found" the first time a user clicks.
+
+A test premise was wrong on first run and was fixed rather than the code:
+`matchesQuery("Modelica.Electrical", "el.el")` was asserted `false`, but
+`modelica` genuinely contains `el`, so two distinct segments matched — correct
+behaviour. The invariant is now expressed as "a query with more pieces than the
+name has segments cannot match".
+
+### Lint configuration repaired
+
+`pnpm lint` had been failing with 8 errors that were configuration faults, not
+code faults:
+
+- `apps/vscode/media/diagram.js` is **generated** by `tools/build-webview.mjs`;
+  linting it reported esbuild's helpers as our errors. Now ignored — the
+  TypeScript source it is bundled from is linted.
+- The webview client and the Node build scripts shared one globals block, so
+  `DOMParser`/`ResizeObserver` were undefined in the browser context and
+  `console` was undefined in `apps/vscode/tools/*.mjs`. Split into two configs.
+- `no-control-regex` in `sanitise.ts` is a true positive with a wrong verdict:
+  matching control characters is the point, because stripping them is what stops
+  `java\u0000script:` hiding a scheme. Disabled for that line with the reason
+  recorded. The disable comment must sit immediately above the regex line, not
+  above the statement.

@@ -11,7 +11,11 @@ Status values: `not started`, `in progress`, `shell` (UI/boundary exists, behavi
 | Repository      | Dependency/provenance/PR templates, security policy                  | 0     | done        | `docs/DEPENDENCIES.md`, `SECURITY.md`                                                    |
 | Identity        | Original activity-bar icon                                           | 0     | done        | `apps/vscode/media/activity-bar.svg`                                                     |
 | UI              | Design-token package                                                 | 0     | done        | `packages/ui/src/tokens.ts`                                                              |
-| UI              | Six primary sidebar sections with empty states                       | 0     | shell       | `apps/vscode/test/manifest.test.ts`                                                      |
+| UI              | Six primary sidebar sections with empty states                       | 0     | done        | `apps/vscode/test/manifest.test.ts`                                                      |
+| UI              | Libraries search with ranked, dot-segmented matching                 | 2     | done        | `apps/vscode/test/match.test.ts`                                                         |
+| UI              | Models tree over workspace `.mo` files                               | 2     | done        | `apps/vscode/src/views/modelsTree.ts`                                                    |
+| UI              | Elements tree following the active editor                            | 2     | done        | `apps/vscode/src/views/elementsTree.ts`                                                  |
+| UI              | Command/menu registration parity guard                               | 2     | done        | `apps/vscode/test/manifest.test.ts`                                                      |
 | UI              | Custom diagram editor shell (CSP, nonce, versioned messages)         | 0     | shell       | `apps/vscode/test/diagramHtml.test.ts`                                                   |
 | Visual          | Deterministic empty-canvas harness and viewport fixtures             | 0     | done        | `pnpm test:visual`                                                                       |
 | OMC             | Executable resolution order (setting/OPENMODELICAHOME/PATH/defaults) | 1     | done        | `packages/omc/test/discovery.test.ts`                                                    |
@@ -23,7 +27,9 @@ Status values: `not started`, `in progress`, `shell` (UI/boundary exists, behavi
 | OMC             | Libraries outline, Check Model, Reveal Class Source                  | 1     | done        | `apps/vscode/src/views/librariesTree.ts`, `apps/vscode/src/extension.ts`                 |
 | OMC             | Problems diagnostics from `getErrorString()`                         | 1     | done        | `apps/vscode/test/diagnostics.test.ts`, `packages/omc/test/errors.test.ts`               |
 | Language        | Modelica grammar and language configuration                          | 1     | done        | `apps/vscode/test/grammar.test.ts`                                                       |
-| Diagram         | Annotation decoder, scene graph, SVG renderer                        | 2     | not started | —                                                                                        |
+| Diagram         | Annotation decoder, scene graph, SVG renderer                        | 2     | done        | `packages/modelica/test/*`, `pnpm test:visual`                                           |
+| Diagram         | Pan/zoom, grid, working extent, tool rail                            | 2     | done        | `packages/ui/test/{viewport,extentGeometry}.test.ts`                                     |
+| Sample          | End-to-end model: check, simulate, asserted results                  | 2     | done        | `pnpm sample`, `samples/README.md`                                                       |
 | Editing         | Lossless CST and source patch engine                                 | 3     | not started | —                                                                                        |
 | Simulation      | Build/run/cancel, results tree                                       | 4     | not started | —                                                                                        |
 | Plotting        | Figures workbench                                                    | 5     | not started | —                                                                                        |
