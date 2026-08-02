@@ -30,9 +30,12 @@ implemented and verified lives in [docs/PROGRESS.md](./docs/PROGRESS.md).
       All done and verified against MSL: `buildDiagramScene` composes components,
       placements, inherited icon layers and routed connection lines
       (`packages/modelica/src/scene/builder.ts`).
-- [ ] Render SVG diagram/icon views with pan/zoom/fit.
-      Renderer core is done (`packages/ui/src/render/svg.ts`, baselines in
-      `fixtures/baselines/icons/`); webview mounting and pan/zoom/fit remain.
+- [x] Render the SVG diagram view in the webview with pan/zoom/fit. (icon view outstanding)
+      Renderer core done (`packages/ui/src/render/svg.ts`, baselines in
+      `fixtures/baselines/icons/`); the diagram view is now mounted in the
+      webview with pan/zoom/fit (`packages/ui/src/view/viewport.ts`,
+      `apps/vscode/src/webview/client/main.ts`). Icon view and the
+      diagram/icon/text mode switch are the next slice.
 - [ ] Implement Libraries, Models, and Elements trees/search.
 - [ ] Render the reference DC motor fixture and visual baselines.
 - [ ] Produce phase-2 gate report.

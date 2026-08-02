@@ -1,23 +1,32 @@
 import * as vscode from "vscode";
 import { CONTRACT_VERSION } from "@modelica-studio/contracts";
+import { annotationSource } from "./annotationSource.js";
+import { buildSceneMessage, findClassesInFile, pickDisplayClass } from "./diagramScene.js";
+import type { OmcService } from "./omcService.js";
 import { buildDiagramHtml, diagramStylesheet } from "./webview/diagramHtml.js";
+import { isWebviewReady, type DiagramMessage } from "./webview/protocol.js";
 import { createNonce } from "./webview/nonce.js";
 
 /**
- * Read-only diagram shell for `.mo` documents.
+ * Read-only diagram editor for `.mo` documents.
  *
- * The webview never mutates source. It receives versioned snapshots only, and
- * phase 2 replaces the placeholder sheet with the real scene-graph renderer.
+ * The webview never mutates source and never sees it: the extension host asks
+ * the compiler for the document's class, composes the scene, renders it to SVG,
+ * and posts only that. Interaction (pan, zoom, fit) is entirely client-side, so
+ * moving the view costs no compiler round trips.
  */
 export class DiagramEditorProvider implements vscode.CustomTextEditorProvider {
   static readonly viewType = "modelicaStudio.diagram";
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(
+    private readonly context: vscode.ExtensionContext,
+    private readonly omc: OmcService,
+  ) {}
 
-  static register(context: vscode.ExtensionContext): vscode.Disposable {
+  static register(context: vscode.ExtensionContext, omc: OmcService): vscode.Disposable {
     return vscode.window.registerCustomEditorProvider(
       DiagramEditorProvider.viewType,
-      new DiagramEditorProvider(context),
+      new DiagramEditorProvider(context, omc),
       {
         webviewOptions: { retainContextWhenHidden: true },
         supportsMultipleEditorsPerDocument: true,
@@ -46,31 +55,43 @@ export class DiagramEditorProvider implements vscode.CustomTextEditorProvider {
       title: `Diagram: ${document.fileName}`,
     });
 
-    const post = (): void => {
-      if (token.isCancellationRequested) {
-        return;
+    const post = (message: DiagramMessage): void => {
+      if (!token.isCancellationRequested) {
+        void panel.webview.postMessage(message);
       }
-      void panel.webview.postMessage({
-        version: CONTRACT_VERSION,
-        type: "document/snapshot",
-        revision: document.version,
-        payload: { uri: document.uri.toString(), lineCount: document.lineCount },
+    };
+
+    const status = (text: string): void => {
+      post({ version: CONTRACT_VERSION, type: "diagram/status", payload: { status: text } });
+    };
+
+    /** Rebuilds the scene. Serialised so a burst of saves cannot interleave. */
+    let pending: Promise<void> = Promise.resolve();
+    const refresh = (): void => {
+      pending = pending.then(async () => {
+        if (token.isCancellationRequested) {
+          return;
+        }
+        try {
+          const message = await this.render(document);
+          post(message);
+        } catch (error) {
+          // A broken model must not blank the canvas: keep the last good
+          // drawing on screen and say what went wrong.
+          status(`Diagram unavailable: ${describe(error)}`);
+        }
       });
     };
 
-    const changeSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
-      if (event.document.uri.toString() === document.uri.toString()) {
-        post();
+    const changeSubscription = vscode.workspace.onDidSaveTextDocument((saved) => {
+      if (saved.uri.toString() === document.uri.toString()) {
+        refresh();
       }
     });
 
     const messageSubscription = panel.webview.onDidReceiveMessage((message: unknown) => {
-      if (
-        typeof message === "object" &&
-        message !== null &&
-        (message as { type?: unknown }).type === "webview/ready"
-      ) {
-        post();
+      if (isWebviewReady(message)) {
+        refresh();
       }
     });
 
@@ -79,6 +100,28 @@ export class DiagramEditorProvider implements vscode.CustomTextEditorProvider {
       messageSubscription.dispose();
     });
   }
+
+  /** Resolves the document's class and renders it, or explains why it cannot. */
+  private async render(document: vscode.TextDocument): Promise<DiagramMessage> {
+    const path = document.uri.fsPath;
+    const message = await this.omc.withSession(async (session) => {
+      const classNames = await findClassesInFile(session, path);
+      const className = await pickDisplayClass(session, classNames);
+      if (className === undefined) {
+        return statusMessage("This file does not define a class the compiler can load.");
+      }
+      return await buildSceneMessage(annotationSource(session), className);
+    });
+    return message ?? statusMessage("OpenModelica is unavailable; see the Modelica Studio output.");
+  }
+}
+
+function statusMessage(text: string): DiagramMessage {
+  return { version: CONTRACT_VERSION, type: "diagram/status", payload: { status: text } };
+}
+
+function describe(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 /** Generates the stylesheet content used by the packaged media file. */

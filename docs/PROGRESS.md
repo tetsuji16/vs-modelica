@@ -230,3 +230,60 @@ output caught what the assertions could not.
 3. **Phase 2 slice 3** — connections and inheritance, then the Libraries/Models/Elements trees
    with search, and the reference DC motor fixture.
 4. Produce `docs/gate-reports/phase-2.md` before starting phase 3.
+
+---
+
+## 2026-08-02 — Phase 2 slice 4: the diagram webview is live
+
+Gate report: `docs/gate-reports/phase-2-slice-4.md`.
+
+The composed scene from slice 3 is now actually on screen. The custom editor
+resolves the document's class through `OmcService`, renders it with
+`renderSceneGraph`, and posts it to the webview; the webview adopts the SVG and
+gives the user pan, zoom and fit.
+
+### Verified
+
+```text
+pnpm -r build   -> 5 projects, webview client bundled to media/diagram.js
+pnpm -r check   -> tsc --noEmit clean
+pnpm vitest run -> 26 files, 169 tests, all passing (was 130)
+```
+
+Interactively, against the `CauerLowPassAnalog` baseline and driving the real
+bundled client: initial fit shows the whole circuit at 66%, two zoom steps take
+it to 95% while staying centred, reset returns to 100%.
+
+### Key files
+
+- `packages/ui/src/view/viewport.ts` — pure pan/zoom/fit math (19 tests).
+- `apps/vscode/src/webview/protocol.ts` — host/webview message contract.
+- `apps/vscode/src/diagramScene.ts` — class resolution and message assembly.
+- `apps/vscode/src/webview/client/main.ts` — the webview client.
+- `apps/vscode/tools/build-webview.mjs` — esbuild bundle, so shipped == tested.
+
+### Two bugs the green suite missed
+
+Both were caught by rendering and looking, and both now have regression tests:
+
+1. **Fit multiplied two scales.** `fitViewport` took Modelica units, but the
+   renderer already sizes each SVG in pixels (240 units → 900×750 px). The first
+   render landed at 154% and overflowed. Fit now compares pixels with pixels.
+2. **The declared box is not the ink.** Component labels are drawn outside the
+   `viewBox` by design, so fitting `width`/`height` still clipped the leftmost
+   component. The client now fits the union of `viewBox` and `getBBox`, and
+   nudges the drawing back inside the stage.
+
+### Not yet done in this area
+
+- icon view and the diagram/icon/text mode switch (drawing tools stay disabled);
+- pinned-Chromium pixel baselines for the webview itself;
+- `%name` / `%R` placeholder substitution in `Text`;
+- connector instances are not drawn at diagram level.
+
+### Next slice
+
+1. **Phase 2 slice 5** — icon view plus the diagram/icon/text mode switch.
+2. `%name` / parameter-value substitution in `Text` shapes.
+3. Libraries/Models/Elements trees with search, and the DC motor fixture.
+4. Produce `docs/gate-reports/phase-2.md` before starting phase 3.

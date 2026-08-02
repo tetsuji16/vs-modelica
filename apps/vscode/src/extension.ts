@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
   }
 
-  context.subscriptions.push(DiagramEditorProvider.register(context));
+  context.subscriptions.push(DiagramEditorProvider.register(context, omc));
   context.subscriptions.push(omc.onDidChange(() => libraries.refresh()));
 
   context.subscriptions.push(

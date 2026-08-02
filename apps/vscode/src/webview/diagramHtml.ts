@@ -54,19 +54,22 @@ export function buildDiagramHtml(options: DiagramHtmlOptions): string {
         <button type="button" class="mso-tool" data-tool="ellipse" title="Ellipse" aria-label="Ellipse" disabled>&#9711;</button>
         <button type="button" class="mso-tool" data-tool="text" title="Text" aria-label="Text" disabled>T</button>
         <button type="button" class="mso-tool" data-tool="bitmap" title="Bitmap" aria-label="Bitmap" disabled>&#9635;</button>
-        <button type="button" class="mso-tool" data-tool="fit" title="Fit to window" aria-label="Fit to window" disabled>&#8862;</button>
-        <button type="button" class="mso-tool" data-tool="zoom-in" title="Zoom in" aria-label="Zoom in" disabled>+</button>
-        <button type="button" class="mso-tool" data-tool="zoom-out" title="Zoom out" aria-label="Zoom out" disabled>&#8722;</button>
-        <button type="button" class="mso-tool" data-tool="reset" title="Reset view" aria-label="Reset view" disabled>&#8634;</button>
+        <button type="button" class="mso-tool" data-view-tool="fit" title="Fit to window" aria-label="Fit to window" disabled>&#8862;</button>
+        <button type="button" class="mso-tool" data-view-tool="zoom-in" title="Zoom in" aria-label="Zoom in" disabled>+</button>
+        <button type="button" class="mso-tool" data-view-tool="zoom-out" title="Zoom out" aria-label="Zoom out" disabled>&#8722;</button>
+        <button type="button" class="mso-tool" data-view-tool="reset" title="Reset view" aria-label="Reset view" disabled>&#8634;</button>
       </nav>
       <section class="mso-sheet-area">
         <div class="mso-mode-controls" role="group" aria-label="View mode">
           <button type="button" class="mso-mode is-active" data-mode="diagram" aria-pressed="true">Diagram</button>
           <button type="button" class="mso-mode" data-mode="icon" aria-pressed="false" disabled>Icon</button>
           <button type="button" class="mso-mode" data-mode="text" aria-pressed="false" disabled>Text</button>
+          <span id="mso-zoom" class="mso-zoom" aria-label="Zoom level">100%</span>
         </div>
-        <div id="mso-sheet" class="mso-sheet" role="img" aria-label="Empty diagram sheet"></div>
-        <p id="mso-status" class="mso-status" role="status">Phase 0 shell: the diagram renderer arrives in phase 2.</p>
+        <div id="mso-sheet" class="mso-sheet" role="img" tabindex="0" aria-label="Empty diagram sheet">
+          <div id="mso-stage" class="mso-stage"></div>
+        </div>
+        <p id="mso-status" class="mso-status" role="status">Loading the diagram&#8230;</p>
       </section>
     </main>
     <script nonce="${nonce}" src="${scriptUri}"></script>
@@ -86,6 +89,45 @@ body.mso-body {
   background: var(--mso-bg);
   font-family: var(--mso-font);
   font-size: var(--mso-font-size);
+}
+
+.mso-sheet {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  touch-action: none;
+  cursor: grab;
+  outline-offset: -2px;
+}
+
+.mso-sheet.is-panning {
+  cursor: grabbing;
+}
+
+/*
+ * The stage carries the pan/zoom transform. Its origin is the top-left corner so
+ * the CSS transform matches the viewport maths exactly, which is what keeps
+ * cursor-anchored zoom from drifting.
+ */
+.mso-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.mso-stage svg {
+  display: block;
+  overflow: visible;
+}
+
+.mso-zoom {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
 }
 `;
 }

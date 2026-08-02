@@ -15,3 +15,20 @@ export {
   type RenderedScene,
   type SceneSvgOptions,
 } from "./render/scene.js";
+export {
+  FIT_PADDING,
+  IDENTITY_VIEWPORT,
+  MAX_SCALE,
+  MIN_SCALE,
+  ZOOM_STEP,
+  clampScale,
+  fitViewport,
+  formatZoom,
+  panBy,
+  toCssTransform,
+  zoomAt,
+  zoomBy,
+  type PointerPosition,
+  type Viewport,
+  type ViewportSize,
+} from "./view/viewport.js";

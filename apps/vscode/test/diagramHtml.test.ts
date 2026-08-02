@@ -38,7 +38,7 @@ describe("diagram webview shell", () => {
     }
   });
 
-  it("exposes the tool rail groups from the visual spec", () => {
+  it("exposes the drawing tools from the visual spec, still disabled", () => {
     for (const tool of [
       "select",
       "connection",
@@ -47,13 +47,26 @@ describe("diagram webview shell", () => {
       "ellipse",
       "text",
       "bitmap",
-      "fit",
-      "zoom-in",
-      "zoom-out",
-      "reset",
     ]) {
       expect(html).toContain(`data-tool="${tool}"`);
     }
+  });
+
+  it("marks the view controls so the client can enable them once a scene arrives", () => {
+    // `data-view-tool` is the client's contract: drawing tools stay inert until
+    // editing exists, view tools become live as soon as there is something to
+    // look at.
+    for (const tool of ["fit", "zoom-in", "zoom-out", "reset"]) {
+      expect(html).toContain(`data-view-tool="${tool}"`);
+    }
+    expect(html).not.toContain('data-tool="fit"');
+  });
+
+  it("ships a stage element for the pan/zoom transform and a zoom readout", () => {
+    expect(html).toContain('id="mso-stage"');
+    expect(html).toContain('id="mso-zoom"');
+    // The sheet must be focusable for keyboard panning to reach it.
+    expect(html).toMatch(/id="mso-sheet"[^>]*tabindex="0"/);
   });
 
   it("injects theme tokens rather than hard-coded colours", () => {

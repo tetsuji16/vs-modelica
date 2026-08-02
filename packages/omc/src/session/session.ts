@@ -152,6 +152,20 @@ export class OmcSession {
   }
 
   /**
+   * Reports whether a class is a package.
+   *
+   * A missing or unloadable class answers `false` rather than throwing: callers
+   * use this to decide whether to descend into a tree, and a hole in the tree is
+   * not an error worth aborting a whole traversal for.
+   */
+  async isPackage(className: string): Promise<boolean> {
+    if (!isModelicaName(className)) {
+      return false;
+    }
+    return asBoolean(await this.call("isPackage", [arg.identifier(className)]));
+  }
+
+  /**
    * Calls an allowlisted function and returns the *undecoded* reply.
    *
    * Graphical annotations are Modelica expressions, not scalars: decoding them
