@@ -132,6 +132,57 @@ export function toCssTransform(view: Viewport): string {
   return `translate(${round(view.x)}px, ${round(view.y)}px) scale(${round(view.scale)})`;
 }
 
+/**
+ * Grid ruling, in Modelica coordinate units.
+ *
+ * MSL icon extents are conventionally -100..100, so this is the 10/100 ruling
+ * every Modelica tool draws.
+ */
+export const GRID_MINOR_STEP = 10;
+export const GRID_MAJOR_STEP = 100;
+
+/**
+ * Below this on-screen pitch the minor ruling stops being guidance and becomes
+ * noise, so it is dropped rather than drawn as a grey wash.
+ */
+export const GRID_MINOR_MIN_PX = 4;
+
+/** Screen-space placement of the drawing extent and its grid. */
+export interface ExtentGeometry {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+  readonly minorPx: number;
+  readonly majorPx: number;
+  readonly minorVisible: boolean;
+  /** False when there is nothing to draw, so the sheet is not shown as a sliver. */
+  readonly visible: boolean;
+}
+
+/**
+ * Places the drawing sheet in screen space.
+ *
+ * The grid is deliberately not drawn inside the scaled stage: there its 1px
+ * rules would scale with the diagram and blur at fractional zoom. Instead the
+ * extent is positioned and sized to match the transformed drawing, and the grid
+ * pitch is the coordinate step multiplied by the scale — so the ruling tracks
+ * zoom while its lines stay crisp.
+ */
+export function extentGeometry(view: Viewport, content: ViewportSize): ExtentGeometry {
+  const minorPx = GRID_MINOR_STEP * view.scale;
+  return {
+    left: view.x,
+    top: view.y,
+    width: content.width * view.scale,
+    height: content.height * view.scale,
+    minorPx,
+    majorPx: GRID_MAJOR_STEP * view.scale,
+    minorVisible: minorPx >= GRID_MINOR_MIN_PX,
+    visible: content.width > 0 && content.height > 0,
+  };
+}
+
 /** Formats the zoom level the way the status line shows it. */
 export function formatZoom(view: Viewport): string {
   return `${Math.round(view.scale * 100)}%`;

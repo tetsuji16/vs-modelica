@@ -5,6 +5,7 @@ import { DiagramEditorProvider } from "./diagramEditor.js";
 import { DiagnosticsPublisher, classNameOf } from "./diagnostics.js";
 import { renderEnvironmentReport } from "./environmentReport.js";
 import { OmcService } from "./omcService.js";
+import { HealthStatusItem } from "./statusBar.js";
 import { LibrariesTreeProvider } from "./views/librariesTree.js";
 import { SectionTreeProvider } from "./views/sectionTree.js";
 
@@ -15,7 +16,19 @@ export function activate(context: vscode.ExtensionContext): void {
   const omc = new OmcService(output);
   const diagnostics = new DiagnosticsPublisher(omc, output);
   const libraries = new LibrariesTreeProvider(omc);
-  context.subscriptions.push(output, omc, diagnostics, libraries);
+  // The reference product keeps a persistent health indicator in the status
+  // bar; "Modelica Studio (" is the prefix DiagnosticsPublisher stamps on its
+  // diagnostics, so the counts never include other extensions' problems.
+  const health = new HealthStatusItem("Modelica Studio (");
+  context.subscriptions.push(output, omc, diagnostics, libraries, health);
+
+  const refreshHealth = async (): Promise<void> => {
+    health.setEnvironment((await omc.getEnvironment()).status);
+  };
+  void refreshHealth();
+  context.subscriptions.push(
+    vscode.languages.onDidChangeDiagnostics(() => health.refresh()),
+  );
 
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider("modelicaStudio.libraries", libraries),
@@ -29,7 +42,12 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 
   context.subscriptions.push(DiagramEditorProvider.register(context, omc));
-  context.subscriptions.push(omc.onDidChange(() => libraries.refresh()));
+  context.subscriptions.push(
+    omc.onDidChange(() => {
+      libraries.refresh();
+      void refreshHealth();
+    }),
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("modelicaStudio.open", async () => {
@@ -129,6 +147,7 @@ export function activate(context: vscode.ExtensionContext): void {
       if (event.affectsConfiguration("modelicaStudio.omc")) {
         omc.restart();
         libraries.refresh();
+        void refreshHealth();
       }
     }),
   );

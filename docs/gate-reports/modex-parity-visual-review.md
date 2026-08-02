@@ -4,7 +4,7 @@ Date: 2026-08-02
 Scope: the shipped diagram webview and extension manifest, reviewed against
 `docs/04-visual-spec.md` (our parity contract) and the public Modex reference
 (Marketplace description + the two published product screenshots).
-Outcome: **7 defects found and fixed**; suite 182 → 192 tests.
+Outcome: **11 defects found and fixed** across two passes; suite 182 → 209 tests.
 
 ## Method
 
@@ -146,15 +146,102 @@ One new test is worth calling out: *"styles every class the markup ships"* walks
 every `class="…"` in the generated HTML and fails if the stylesheet has no rule
 for it. That is the check that would have caught defect 1 on the day it landed.
 
+## Follow-up pass: the remaining four defects
+
+The first pass fixed what the spec table could be read against. This pass closed
+the rest, including three that the first review named but deferred. Suite
+192 -> 209.
+
+### 8. No status bar health indicator
+
+Both reference screenshots show a persistent `Modex: OK` item with error and
+warning counts. We had none.
+
+Added as `HealthStatusItem`, fed by `languages.onDidChangeDiagnostics` and
+counting the live collection rather than a cached tally, so clearing a file's
+problems updates it immediately. It counts only diagnostics whose source starts
+with `Modelica Studio (` — other extensions' problems are not ours to report.
+
+Two rules are worth stating because they are judgement, not transcription:
+
+- **The compiler's state outranks the counts.** `0 errors` while OMC is missing
+  is a false clean bill of health: the count is zero because nothing ran. In
+  that state the item says `compiler not found` and the tooltip says explicitly
+  that no model has been checked.
+- **Warnings alone do not raise the alert background.** An item that turns
+  orange for warnings is an item users learn to ignore.
+
+The wording lives in `statusText.ts`, which does not import `vscode`, so it is
+unit tested in node rather than behind a host mock — the same split the rest of
+this codebase already uses.
+
+### 9. Absolute paths leaked into on-screen text
+
+`Diagram unavailable: ${error.message}` went straight to the canvas status line,
+and OMC embeds the full source path in its errors. That put
+`C:\Users\<account>\...` — the user's account name — on screen, into
+screenshots and into any bug report made from one.
+
+`redactPaths()` maps the home directory to `~` and reduces every other absolute
+path to its basename, which is the part the reader actually needs. The full path
+still goes to the output channel, which is local and opt-in.
+
+Two bugs in the first cut of that regex were caught by its own tests, both worth
+keeping as cases:
+
+- `C:\Program Files\OpenModelica\bin\omc.exe missing` — a naive
+  no-whitespace pattern stops at the space and mangles the sentence. A space is
+  now part of a path only when another separator follows before the next space.
+- `see docs/04-visual-spec.md` — a bare `/` root matched mid-word and spliced
+  the result into `docs04-visual-spec.md`. A lookbehind now prevents matching a
+  slash that follows a word character.
+
+### 10. The wheel handler was worse than reported
+
+The first review recorded this as "ctrl+wheel steals VS Code's font zoom". Reading
+the handler, it was the opposite problem too: it called `preventDefault()` on
+**every** wheel event and zoomed on all of them. A trackpad two-finger scroll —
+the ordinary way to pan a canvas — zoomed instead, and the canvas could not be
+scrolled at all.
+
+Now: ctrl/cmd+wheel zooms (and must keep preventing the default, which in a
+webview is the editor font-size zoom), plain wheel pans, shift+wheel pans
+horizontally. Verified in the browser harness by dispatching real `WheelEvent`s:
+
+```text
+plain wheel  -> translate(318.9, 35.6) -> translate(318.9, -84.4), zoom 70% -> 70%
+ctrl+wheel   -> zoom 70% -> 83%, defaultPrevented true
+shift+wheel  -> translate(302.7, -161.3) -> translate(182.7, -161.3)
+```
+
+### 11. The visual harness was checked by eye
+
+Which is exactly how an unstyled tool rail survived a review. The grid and sheet
+maths also lived inline in `main.ts` — the one file no test touches, because it
+is the only file that talks to the DOM.
+
+Extracted to `extentGeometry()` in the pure viewport module and pinned by a
+measured baseline that CI runs without a browser: sheet placement equals the
+stage transform (so sheet and drawing cannot drift), fit centres within the
+spec's padding, one zoom click multiplies the ruling by exactly `ZOOM_STEP`, the
+major/minor ratio stays 10 at every scale from 0.05x to 40x, the minor ruling
+drops out when too dense, and an empty document hides the sheet instead of
+drawing a white sliver.
+
+Browser re-measurement after the refactor: rail 46.0 px, sheet `rgb(255,255,255)`,
+major 83.49 px, minor 8.35 px, ratio exactly 10.
+
 ## Not defects — parity gaps that are simply unbuilt
 
 Recording these so "parity" is not overclaimed. Against the reference feature
 list, these are absent by schedule, not by mistake: icon editor, text editor with
 synchronized views, drag-and-drop editing and connection routing, simulation,
 plotting workbench, 3D animation, library management, AI assistant / MCP /
-canvas popover, and the debugger. The status-bar health item (`Modex: OK`,
-error/warning counts) visible in both screenshots is also not implemented; it is
-cheap and belongs with the diagnostics work, not with this review.
+canvas popover, and the debugger.
+
+The run and route buttons in the top-right row are present but disabled, which
+is deliberate: the layout is honest about the product's shape while refusing to
+imply a capability that does not exist yet.
 
 `docs/FEATURE-MATRIX.md` remains the place where a parity claim may be made, and
 only when its gate passes.

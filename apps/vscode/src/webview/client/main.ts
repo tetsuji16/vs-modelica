@@ -3,6 +3,7 @@ import {
   ZOOM_STEP,
   fitViewport,
   formatZoom,
+  extentGeometry,
   panBy,
   toCssTransform,
   zoomAt,
@@ -58,34 +59,22 @@ function size(): ViewportSize {
   return { width: box.width, height: box.height };
 }
 
-/**
- * One Modelica coordinate step per minor grid square, ten per major square.
- * MSL icon extents are conventionally -100..100, so this is the same 10/100
- * ruling every Modelica tool draws.
- */
-const MINOR_STEP = 10;
-const MAJOR_STEP = 100;
-
 function apply(): void {
   stage!.style.transform = toCssTransform(view);
   zoomReadout!.textContent = formatZoom(view);
 
-  /*
-   * The grid lives in screen space, not model space: drawn inside the scaled
-   * stage its 1px rules would scale too and blur at fractional zoom. So the
-   * extent is positioned and sized in screen pixels to match the transformed
-   * drawing, and the grid pitch is the step size multiplied by the scale.
-   */
+  // The geometry itself is computed by a pure, unit-tested function; this
+  // layer only writes it to the DOM.
+  const geometry = extentGeometry(view, content);
   const style = extent!.style;
-  style.left = `${view.x}px`;
-  style.top = `${view.y}px`;
-  style.width = `${content.width * view.scale}px`;
-  style.height = `${content.height * view.scale}px`;
-  style.setProperty("--mso-grid-minor-size", `${MINOR_STEP * view.scale}px`);
-  style.setProperty("--mso-grid-major-size", `${MAJOR_STEP * view.scale}px`);
-  // Below roughly a pixel per square the minor ruling is noise, not guidance.
-  style.setProperty("--mso-grid-minor", MINOR_STEP * view.scale < 4 ? "transparent" : "");
-  extent!.hidden = content.width === 0 || content.height === 0;
+  style.left = `${geometry.left}px`;
+  style.top = `${geometry.top}px`;
+  style.width = `${geometry.width}px`;
+  style.height = `${geometry.height}px`;
+  style.setProperty("--mso-grid-minor-size", `${geometry.minorPx}px`);
+  style.setProperty("--mso-grid-major-size", `${geometry.majorPx}px`);
+  style.setProperty("--mso-grid-minor", geometry.minorVisible ? "" : "transparent");
+  extent!.hidden = !geometry.visible;
 }
 
 function setView(next: Viewport, userDriven: boolean): void {
@@ -206,13 +195,35 @@ sheet.addEventListener("pointerup", endPan);
 sheet.addEventListener("pointercancel", endPan);
 
 // --- wheel zoom ------------------------------------------------------------
+/*
+ * Wheel semantics match every other canvas editor, and deliberately do not
+ * swallow the whole gesture:
+ *
+ * - ctrl/cmd + wheel zooms. The browser's default here is page zoom, and in a
+ *   VS Code webview that is the editor font-size zoom, so this one must be
+ *   prevented or the diagram and the whole UI scale at once.
+ * - a plain wheel scrolls, which on a trackpad is a two-finger pan. Previously
+ *   every wheel event was prevented and zoomed, so a user trying to pan
+ *   zoomed instead and could not scroll the canvas at all.
+ * - shift + wheel pans horizontally, as elsewhere.
+ */
 sheet.addEventListener(
   "wheel",
   (event) => {
-    event.preventDefault();
     const box = sheet.getBoundingClientRect();
-    const factor = Math.pow(ZOOM_STEP, -Math.sign(event.deltaY));
-    setView(zoomAt(view, factor, { x: event.clientX - box.left, y: event.clientY - box.top }), true);
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      const factor = Math.pow(ZOOM_STEP, -Math.sign(event.deltaY));
+      setView(
+        zoomAt(view, factor, { x: event.clientX - box.left, y: event.clientY - box.top }),
+        true,
+      );
+      return;
+    }
+    event.preventDefault();
+    const horizontal = event.shiftKey ? event.deltaY : event.deltaX;
+    const vertical = event.shiftKey ? 0 : event.deltaY;
+    setView(panBy(view, -horizontal, -vertical), true);
   },
   { passive: false },
 );

@@ -372,3 +372,38 @@ in this repository, and our identity is `modelicaStudio.*` throughout.
 pnpm -r check   -> clean
 pnpm vitest run -> 28 files, 192 tests, all passing
 ```
+
+### Follow-up pass (same day) — remaining four defects closed
+
+8. **No status bar health item** — both reference screenshots show a persistent
+   `OK` / error / warning indicator. Added, fed by
+   `onDidChangeDiagnostics` off the live collection, counting only our own
+   diagnostics. Two judgement calls: the compiler's state outranks the counts
+   (`0 errors` with OMC missing is a false clean bill of health), and warnings
+   alone do not raise the alert background. Wording lives in `statusText.ts`,
+   which does not import `vscode`, so it is node-testable.
+9. **Absolute paths leaked into on-screen text** — `Diagram unavailable: ...`
+   echoed OMC errors verbatim, putting `C:\Users\<account>\...` into the canvas
+   status line and thus into screenshots. `redactPaths()` maps home to `~` and
+   other absolute paths to their basename; full paths still go to the output
+   channel. Its own tests caught two regex bugs worth keeping: paths containing
+   spaces (`C:\Program Files\...`) and a bare `/` matching mid-word in
+   `docs/04-visual-spec.md`.
+10. **Wheel handling was worse than first recorded** — it `preventDefault()`ed
+    *every* wheel event and zoomed on all of them, so trackpad two-finger scroll
+    zoomed and the canvas could not be panned at all. Now ctrl/cmd+wheel zooms
+    (still prevented, or the webview font-zooms), plain wheel pans, shift+wheel
+    pans horizontally. Verified with dispatched `WheelEvent`s in the harness.
+11. **The visual harness was eye-checked only** — which is how an unstyled tool
+    rail survived a review. The grid/sheet maths also sat inline in `main.ts`,
+    the only untested file. Extracted to `extentGeometry()` and pinned by a
+    measured baseline CI can run headless: sheet placement equals the stage
+    transform, fit centres within the spec's padding, one zoom click multiplies
+    the ruling by exactly `ZOOM_STEP`, major/minor stays 10:1 from 0.05x to 40x,
+    the minor ruling drops when too dense, empty documents hide the sheet.
+
+```text
+pnpm -r check   -> 5 projects, 0 errors
+pnpm vitest run -> 30 files, 209 tests, all passing
+browser         -> rail 46.0px, sheet rgb(255,255,255), grid 83.49/8.35 ratio 10
+```

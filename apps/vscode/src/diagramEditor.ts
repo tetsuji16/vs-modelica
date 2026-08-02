@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { redactPaths } from "./redact.js";
 import { CONTRACT_VERSION } from "@modelica-studio/contracts";
 import { annotationSource } from "./annotationSource.js";
 import { buildSceneMessage, findClassesInFile, pickDisplayClass } from "./diagramScene.js";
@@ -140,8 +141,15 @@ function statusMessage(text: string): DiagramMessage {
   return { version: CONTRACT_VERSION, type: "diagram/status", payload: { status: text } };
 }
 
+/**
+ * Error text for the canvas status line.
+ *
+ * Redacted: compiler messages embed absolute paths, and the status line is
+ * on-screen UI that ends up in screenshots and bug reports. The full path is
+ * still written to the output channel, which is opt-in and local.
+ */
 function describe(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  return redactPaths(error instanceof Error ? error.message : String(error));
 }
 
 /** Generates the stylesheet content used by the packaged media file. */

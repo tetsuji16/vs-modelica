@@ -446,13 +446,14 @@ ${body}
     "../../packages/ui/dist/view/viewport.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.IDENTITY_VIEWPORT = exports.ZOOM_STEP = exports.FIT_PADDING = exports.MAX_SCALE = exports.MIN_SCALE = void 0;
+      exports.GRID_MINOR_MIN_PX = exports.GRID_MAJOR_STEP = exports.GRID_MINOR_STEP = exports.IDENTITY_VIEWPORT = exports.ZOOM_STEP = exports.FIT_PADDING = exports.MAX_SCALE = exports.MIN_SCALE = void 0;
       exports.clampScale = clampScale;
       exports.fitViewport = fitViewport2;
       exports.zoomAt = zoomAt2;
       exports.zoomBy = zoomBy2;
       exports.panBy = panBy2;
       exports.toCssTransform = toCssTransform2;
+      exports.extentGeometry = extentGeometry2;
       exports.formatZoom = formatZoom2;
       exports.MIN_SCALE = 0.05;
       exports.MAX_SCALE = 40;
@@ -502,6 +503,22 @@ ${body}
       function toCssTransform2(view2) {
         return `translate(${round(view2.x)}px, ${round(view2.y)}px) scale(${round(view2.scale)})`;
       }
+      exports.GRID_MINOR_STEP = 10;
+      exports.GRID_MAJOR_STEP = 100;
+      exports.GRID_MINOR_MIN_PX = 4;
+      function extentGeometry2(view2, content2) {
+        const minorPx = exports.GRID_MINOR_STEP * view2.scale;
+        return {
+          left: view2.x,
+          top: view2.y,
+          width: content2.width * view2.scale,
+          height: content2.height * view2.scale,
+          minorPx,
+          majorPx: exports.GRID_MAJOR_STEP * view2.scale,
+          minorVisible: minorPx >= exports.GRID_MINOR_MIN_PX,
+          visible: content2.width > 0 && content2.height > 0
+        };
+      }
       function formatZoom2(view2) {
         return `${Math.round(view2.scale * 100)}%`;
       }
@@ -516,7 +533,7 @@ ${body}
     "../../packages/ui/dist/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.zoomBy = exports.zoomAt = exports.toCssTransform = exports.panBy = exports.formatZoom = exports.fitViewport = exports.clampScale = exports.ZOOM_STEP = exports.MIN_SCALE = exports.MAX_SCALE = exports.IDENTITY_VIEWPORT = exports.FIT_PADDING = exports.renderSceneGraph = exports.componentTransform = exports.renderShape = exports.renderScene = exports.num = exports.escapeXml = exports.colour = exports.SIDEBAR_SECTIONS = exports.renderTokenCss = exports.LAYOUT = exports.DESIGN_TOKENS = void 0;
+      exports.zoomBy = exports.zoomAt = exports.toCssTransform = exports.panBy = exports.formatZoom = exports.fitViewport = exports.extentGeometry = exports.clampScale = exports.ZOOM_STEP = exports.MIN_SCALE = exports.MAX_SCALE = exports.IDENTITY_VIEWPORT = exports.GRID_MINOR_STEP = exports.GRID_MINOR_MIN_PX = exports.GRID_MAJOR_STEP = exports.FIT_PADDING = exports.renderSceneGraph = exports.componentTransform = exports.renderShape = exports.renderScene = exports.num = exports.escapeXml = exports.colour = exports.SIDEBAR_SECTIONS = exports.renderTokenCss = exports.LAYOUT = exports.DESIGN_TOKENS = void 0;
       var tokens_js_1 = require_tokens();
       Object.defineProperty(exports, "DESIGN_TOKENS", { enumerable: true, get: function() {
         return tokens_js_1.DESIGN_TOKENS;
@@ -558,6 +575,15 @@ ${body}
       Object.defineProperty(exports, "FIT_PADDING", { enumerable: true, get: function() {
         return viewport_js_1.FIT_PADDING;
       } });
+      Object.defineProperty(exports, "GRID_MAJOR_STEP", { enumerable: true, get: function() {
+        return viewport_js_1.GRID_MAJOR_STEP;
+      } });
+      Object.defineProperty(exports, "GRID_MINOR_MIN_PX", { enumerable: true, get: function() {
+        return viewport_js_1.GRID_MINOR_MIN_PX;
+      } });
+      Object.defineProperty(exports, "GRID_MINOR_STEP", { enumerable: true, get: function() {
+        return viewport_js_1.GRID_MINOR_STEP;
+      } });
       Object.defineProperty(exports, "IDENTITY_VIEWPORT", { enumerable: true, get: function() {
         return viewport_js_1.IDENTITY_VIEWPORT;
       } });
@@ -572,6 +598,9 @@ ${body}
       } });
       Object.defineProperty(exports, "clampScale", { enumerable: true, get: function() {
         return viewport_js_1.clampScale;
+      } });
+      Object.defineProperty(exports, "extentGeometry", { enumerable: true, get: function() {
+        return viewport_js_1.extentGeometry;
       } });
       Object.defineProperty(exports, "fitViewport", { enumerable: true, get: function() {
         return viewport_js_1.fitViewport;
@@ -673,20 +702,19 @@ ${body}
     const box = sheet.getBoundingClientRect();
     return { width: box.width, height: box.height };
   }
-  var MINOR_STEP = 10;
-  var MAJOR_STEP = 100;
   function apply() {
     stage.style.transform = (0, import_ui.toCssTransform)(view);
     zoomReadout.textContent = (0, import_ui.formatZoom)(view);
+    const geometry = (0, import_ui.extentGeometry)(view, content);
     const style = extent.style;
-    style.left = `${view.x}px`;
-    style.top = `${view.y}px`;
-    style.width = `${content.width * view.scale}px`;
-    style.height = `${content.height * view.scale}px`;
-    style.setProperty("--mso-grid-minor-size", `${MINOR_STEP * view.scale}px`);
-    style.setProperty("--mso-grid-major-size", `${MAJOR_STEP * view.scale}px`);
-    style.setProperty("--mso-grid-minor", MINOR_STEP * view.scale < 4 ? "transparent" : "");
-    extent.hidden = content.width === 0 || content.height === 0;
+    style.left = `${geometry.left}px`;
+    style.top = `${geometry.top}px`;
+    style.width = `${geometry.width}px`;
+    style.height = `${geometry.height}px`;
+    style.setProperty("--mso-grid-minor-size", `${geometry.minorPx}px`);
+    style.setProperty("--mso-grid-major-size", `${geometry.majorPx}px`);
+    style.setProperty("--mso-grid-minor", geometry.minorVisible ? "" : "transparent");
+    extent.hidden = !geometry.visible;
   }
   function setView(next, userDriven) {
     view = next;
@@ -771,10 +799,20 @@ ${body}
   sheet.addEventListener(
     "wheel",
     (event) => {
-      event.preventDefault();
       const box = sheet.getBoundingClientRect();
-      const factor = Math.pow(import_ui.ZOOM_STEP, -Math.sign(event.deltaY));
-      setView((0, import_ui.zoomAt)(view, factor, { x: event.clientX - box.left, y: event.clientY - box.top }), true);
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        const factor = Math.pow(import_ui.ZOOM_STEP, -Math.sign(event.deltaY));
+        setView(
+          (0, import_ui.zoomAt)(view, factor, { x: event.clientX - box.left, y: event.clientY - box.top }),
+          true
+        );
+        return;
+      }
+      event.preventDefault();
+      const horizontal = event.shiftKey ? event.deltaY : event.deltaX;
+      const vertical = event.shiftKey ? 0 : event.deltaY;
+      setView((0, import_ui.panBy)(view, -horizontal, -vertical), true);
     },
     { passive: false }
   );
