@@ -580,6 +580,66 @@ ${body}
 
   // src/webview/client/main.ts
   var import_ui = __toESM(require_dist());
+
+  // src/webview/protocol.ts
+  var PROTOCOL_VERSION = 1;
+  function isDiagramMessage(message) {
+    if (!isVersionedMessage(message)) {
+      return false;
+    }
+    const { type, payload } = message;
+    if (typeof payload !== "object" || payload === null) {
+      return false;
+    }
+    const fields = payload;
+    if (typeof fields["status"] !== "string") {
+      return false;
+    }
+    if (type === "diagram/status") {
+      return true;
+    }
+    if (type !== "diagram/scene") {
+      return false;
+    }
+    const content2 = fields["content"];
+    if (typeof content2 !== "object" || content2 === null) {
+      return false;
+    }
+    const size2 = content2;
+    return typeof fields["svg"] === "string" && typeof fields["label"] === "string" && typeof size2["width"] === "number" && typeof size2["height"] === "number";
+  }
+  function isVersionedMessage(message) {
+    return typeof message === "object" && message !== null && message.version === PROTOCOL_VERSION;
+  }
+
+  // src/webview/client/sanitise.ts
+  var FORBIDDEN_ELEMENTS = /* @__PURE__ */ new Set(["script", "foreignobject", "iframe", "object", "embed", "a"]);
+  var URL_ATTRIBUTES = /* @__PURE__ */ new Set(["href", "xlink:href", "src"]);
+  function sanitiseSvg(root) {
+    for (const child of Array.from(root.children)) {
+      if (FORBIDDEN_ELEMENTS.has(child.nodeName.toLowerCase())) {
+        child.remove();
+        continue;
+      }
+      sanitiseSvg(child);
+    }
+    for (const attribute of Array.from(root.attributes)) {
+      const name = attribute.name.toLowerCase();
+      if (name.startsWith("on")) {
+        root.removeAttribute(attribute.name);
+        continue;
+      }
+      if (URL_ATTRIBUTES.has(name) && !isSafeUrl(attribute.value)) {
+        root.removeAttribute(attribute.name);
+      }
+    }
+  }
+  function isSafeUrl(value) {
+    const url = value.replace(/[\u0000-\u0020]/g, "").trim().toLowerCase();
+    return url.startsWith("#") || url.startsWith("data:image/");
+  }
+
+  // src/webview/client/main.ts
   var CONTRACT_VERSION = 1;
   var vscode = acquireVsCodeApi();
   var sheet = document.getElementById("mso-sheet");
@@ -617,13 +677,11 @@ ${body}
   function showScene(svg, pixelSize, label) {
     const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
     const root = parsed.documentElement;
-    if (root.nodeName !== "svg") {
+    if (root.nodeName !== "svg" || parsed.getElementsByTagName("parsererror").length > 0) {
       status.textContent = "The diagram could not be rendered.";
       return;
     }
-    for (const script of Array.from(parsed.getElementsByTagName("script"))) {
-      script.remove();
-    }
+    sanitiseSvg(root);
     stage.replaceChildren(document.importNode(root, true));
     content = inkSize(pixelSize);
     sheet.setAttribute("aria-label", label);
@@ -746,7 +804,7 @@ ${body}
   }).observe(sheet);
   window.addEventListener("message", (event) => {
     const message = event.data;
-    if (message === null || typeof message !== "object" || message.version !== CONTRACT_VERSION) {
+    if (!isDiagramMessage(message)) {
       return;
     }
     switch (message.type) {

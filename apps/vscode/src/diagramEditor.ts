@@ -65,22 +65,42 @@ export class DiagramEditorProvider implements vscode.CustomTextEditorProvider {
       post({ version: CONTRACT_VERSION, type: "diagram/status", payload: { status: text } });
     };
 
-    /** Rebuilds the scene. Serialised so a burst of saves cannot interleave. */
-    let pending: Promise<void> = Promise.resolve();
+    /**
+     * Rebuilds the scene.
+     *
+     * Renders are serialised so a burst of saves cannot interleave, and
+     * coalesced so a burst cannot queue one compiler round trip per save: while
+     * a render is in flight, further requests collapse into a single follow-up.
+     * Holding a file down on auto-save otherwise builds an unbounded backlog of
+     * work whose results are all discarded but the last.
+     */
+    let running = false;
+    let queued = false;
     const refresh = (): void => {
-      pending = pending.then(async () => {
-        if (token.isCancellationRequested) {
-          return;
-        }
+      if (running) {
+        queued = true;
+        return;
+      }
+      running = true;
+      void (async () => {
         try {
-          const message = await this.render(document);
-          post(message);
-        } catch (error) {
-          // A broken model must not blank the canvas: keep the last good
-          // drawing on screen and say what went wrong.
-          status(`Diagram unavailable: ${describe(error)}`);
+          do {
+            queued = false;
+            if (token.isCancellationRequested) {
+              return;
+            }
+            try {
+              post(await this.render(document));
+            } catch (error) {
+              // A broken model must not blank the canvas: keep the last good
+              // drawing on screen and say what went wrong.
+              status(`Diagram unavailable: ${describe(error)}`);
+            }
+          } while (queued);
+        } finally {
+          running = false;
         }
-      });
+      })();
     };
 
     const changeSubscription = vscode.workspace.onDidSaveTextDocument((saved) => {

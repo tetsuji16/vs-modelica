@@ -82,6 +82,17 @@ export function buildDiagramHtml(options: DiagramHtmlOptions): string {
 export function diagramStylesheet(): string {
   return `${renderTokenCss()}
 
+/*
+ * The canvas has to fill the panel, and a percentage height only resolves if
+ * every ancestor has one. Without this chain the sheet collapses to its
+ * min-height, fit-to-window measures a ~200px viewport, and the diagram is
+ * correctly fitted into a strip at the top of an otherwise empty panel.
+ */
+html,
+body.mso-body {
+  height: 100%;
+}
+
 body.mso-body {
   margin: 0;
   padding: 0;
@@ -91,11 +102,26 @@ body.mso-body {
   font-size: var(--mso-font-size);
 }
 
+.mso-canvas-shell {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.mso-sheet-area {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  /* Without min-height:0 a flex item refuses to shrink below its content, so
+     the sheet would push the status row off the panel instead of scrolling. */
+  min-height: 0;
+}
+
 .mso-sheet {
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 100%;
+  flex: 1;
   min-height: 200px;
   touch-action: none;
   cursor: grab;

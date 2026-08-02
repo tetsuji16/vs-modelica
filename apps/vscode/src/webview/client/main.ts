@@ -10,7 +10,8 @@ import {
   type Viewport,
   type ViewportSize,
 } from "@modelica-studio/ui";
-import type { DiagramMessage } from "../protocol.js";
+import { isDiagramMessage, type DiagramMessage } from "../protocol.js";
+import { sanitiseSvg } from "./sanitise.js";
 
 /**
  * Diagram webview client.
@@ -74,21 +75,21 @@ function fit(userDriven: boolean): void {
 /**
  * Replaces the stage contents with the rendered scene.
  *
- * The SVG arrives as markup from the extension host. It is parsed with
- * `DOMParser` and adopted rather than assigned to `innerHTML`, so no script can
- * execute even if a malformed annotation somehow produced one — the CSP already
- * forbids it, and this is the second lock.
+ * The SVG arrives as markup built from compiler output, so it is treated as
+ * untrusted even though it originates in-process: it is parsed with `DOMParser`
+ * (never `innerHTML`), then stripped of anything executable or outbound before
+ * being adopted. The nonce CSP is the real lock; this is the second one, and it
+ * has to actually hold rather than only claim to.
  */
 function showScene(svg: string, pixelSize: ViewportSize, label: string): void {
   const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
   const root = parsed.documentElement;
-  if (root.nodeName !== "svg") {
+  // A parse error yields a <parsererror> document, not an <svg> one.
+  if (root.nodeName !== "svg" || parsed.getElementsByTagName("parsererror").length > 0) {
     status!.textContent = "The diagram could not be rendered.";
     return;
   }
-  for (const script of Array.from(parsed.getElementsByTagName("script"))) {
-    script.remove();
-  }
+  sanitiseSvg(root);
   stage!.replaceChildren(document.importNode(root, true));
   content = inkSize(pixelSize);
   sheet!.setAttribute("aria-label", label);
@@ -243,9 +244,11 @@ new ResizeObserver(() => {
   }
 }).observe(sheet);
 
-window.addEventListener("message", (event: MessageEvent<DiagramMessage>) => {
+window.addEventListener("message", (event: MessageEvent<unknown>) => {
   const message = event.data;
-  if (message === null || typeof message !== "object" || message.version !== CONTRACT_VERSION) {
+  // Anything posted into this frame lands here, so the whole shape is checked
+  // before a single field is read.
+  if (!isDiagramMessage(message)) {
     return;
   }
   switch (message.type) {
