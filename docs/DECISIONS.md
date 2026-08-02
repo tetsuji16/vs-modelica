@@ -134,3 +134,37 @@ same scene graph always yields byte-identical markup — which is what makes the
 committed SVG baselines in `fixtures/baselines/icons/` meaningful evidence rather
 than decoration. Geometry is never invented: a partial `Ellipse` is drawn as an
 arc, and a `Line` with fewer than two points renders nothing.
+
+## ADR-014: icons are composed along the inheritance chain, base layers first
+
+- Status: accepted
+- Date: 2026-08-02
+
+`getIconAnnotation` returns a class's **own** graphical layer only, but MSL builds
+most icons through `extends`: `Sources.StepVoltage` contributes just the grey step
+curve, while the circle, the `+`/`-` and the terminals come from
+`Analog.Icons.VoltageSource` two levels up. Rendering the leaf layer alone draws a
+stub, so `resolveIcon` walks `getInheritedClasses` depth-first and concatenates
+base layers before the leaf's own shapes, matching Modelica's paint order.
+
+Consequences: `getInheritedClasses` joins the read-only allowlist; a `visiting`
+set makes a cyclic or diamond hierarchy terminate without duplicating shapes; a
+per-build cache decodes each class exactly once (asserted by an integration
+test); and a base class's coordinate system applies only when the leaf declared
+none, which is why `GraphicsResult` now reports `hasCoordinateSystem` — OMC's `-`
+placeholder makes "declared" and "defaulted" otherwise indistinguishable.
+
+This was found by rendering a composed diagram and looking at it while every
+assertion in the suite was green.
+
+## ADR-015: composition reports what it cannot draw instead of inventing it
+
+- Status: accepted
+- Date: 2026-08-02
+
+`getElementAnnotations` is positional against `getComponents` and returns `{}` for
+non-graphical elements, so parameters are skipped silently — they are not missing
+geometry, they have none. Anything that *should* have rendered and could not is
+pushed to `scene.unsupported`: a component whose icon the compiler cannot resolve,
+or a `connect` equation with no `Line` annotation. A route is never guessed,
+because a guessed wire is a wire the model does not contain.

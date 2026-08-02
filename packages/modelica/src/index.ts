@@ -20,7 +20,21 @@ export {
 export {
   DEFAULT_PLACEMENT,
   decodePlacement,
+  decodePlacementNode,
   normaliseExtent,
   type Placement,
   type Transformation,
 } from "./annotation/placement.js";
+export {
+  buildDiagramScene,
+  buildIconScene,
+  decodeComponents,
+  decodeConnectionEnds,
+  decodeConnectionLine,
+  decodeElementAnnotations,
+  decodeInheritedClasses,
+  resolveIcon,
+  type AnnotationSource,
+  type ComponentRecord,
+  type ResolvedIcon,
+} from "./scene/builder.js";

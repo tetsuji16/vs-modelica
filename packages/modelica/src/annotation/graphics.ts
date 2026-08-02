@@ -33,6 +33,12 @@ export interface GraphicsResult {
   readonly coordinateSystem: CoordinateSystem;
   readonly shapes: readonly Shape[];
   readonly unsupported: readonly string[];
+  /**
+   * True when the class actually declared a coordinate system, as opposed to one
+   * being defaulted. Inheritance composition needs the distinction: a base
+   * class's coordinate system applies only if the leaf class declared none.
+   */
+  readonly hasCoordinateSystem: boolean;
 }
 
 const LINE_PATTERNS: readonly LinePattern[] = [
@@ -292,6 +298,7 @@ export function decodeGraphicsAnnotation(payload: string): GraphicsResult {
   const unsupported: string[] = [];
   const shapes: Shape[] = [];
   let coordinateSystem = DEFAULT_COORDINATE_SYSTEM;
+  let declaredCoordinateSystem = false;
 
   const visit = (node: AnnotationNode, depth: number): void => {
     if (node.kind === "array") {
@@ -309,6 +316,7 @@ export function decodeGraphicsAnnotation(payload: string): GraphicsResult {
     const name = node.name.split(".").pop() ?? node.name;
     if (name === "CoordinateSystem") {
       coordinateSystem = toCoordinateSystem(node);
+      declaredCoordinateSystem = true;
       return;
     }
     if (name === "Graphics" || name === "Icon" || name === "Diagram") {
@@ -322,6 +330,7 @@ export function decodeGraphicsAnnotation(payload: string): GraphicsResult {
       const system = node.named.get("coordinateSystem");
       if (system !== undefined) {
         coordinateSystem = toCoordinateSystem(system);
+        declaredCoordinateSystem = true;
       }
       return;
     }
@@ -334,7 +343,7 @@ export function decodeGraphicsAnnotation(payload: string): GraphicsResult {
   };
 
   visit(root, 0);
-  return { coordinateSystem, shapes, unsupported };
+  return { coordinateSystem, shapes, unsupported, hasCoordinateSystem: declaredCoordinateSystem };
 }
 
 /**
@@ -377,5 +386,12 @@ export function decodeFlattenedAnnotation(payload: string): GraphicsResult {
       shapes.push(shape);
     }
   }
-  return { coordinateSystem, shapes, unsupported };
+  return {
+    coordinateSystem,
+    shapes,
+    unsupported,
+    // OMC sends `-` for a field the class did not set, so a real extent in the
+    // leading slots is proof the class declared its own coordinate system.
+    hasCoordinateSystem: [0, 1, 2, 3].some((index) => root.items[index]?.kind === "number"),
+  };
 }

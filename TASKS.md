@@ -26,9 +26,10 @@ implemented and verified lives in [docs/PROGRESS.md](./docs/PROGRESS.md).
 ## Phase 2
 
 - [x] Define annotation and scene-graph contracts. (`packages/contracts/src/scene.ts`)
-- [ ] Decode coordinate systems, placements, primitives, connections, inheritance.
-      Coordinate systems, placements and all six primitives are done and verified
-      against MSL; connections and inheritance remain.
+- [x] Decode coordinate systems, placements, primitives, connections, inheritance.
+      All done and verified against MSL: `buildDiagramScene` composes components,
+      placements, inherited icon layers and routed connection lines
+      (`packages/modelica/src/scene/builder.ts`).
 - [ ] Render SVG diagram/icon views with pan/zoom/fit.
       Renderer core is done (`packages/ui/src/render/svg.ts`, baselines in
       `fixtures/baselines/icons/`); webview mounting and pan/zoom/fit remain.

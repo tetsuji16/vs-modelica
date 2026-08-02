@@ -94,7 +94,15 @@ function flattenedTransformation(
 
 /** Decodes a `Placement(...)` annotation; unknown input yields the defaults. */
 export function decodePlacement(payload: string): Placement {
-  const root = parseAnnotation(payload);
+  return decodePlacementNode(parseAnnotation(payload));
+}
+
+/**
+ * Same as {@link decodePlacement} but starting from an already-parsed node, so
+ * callers that received a batch reply (`getElementAnnotations`) do not have to
+ * re-serialise a sub-expression back to text just to read it again.
+ */
+export function decodePlacementNode(root: AnnotationNode): Placement {
   const call = findCall(root, "Placement");
   if (call === undefined) {
     return DEFAULT_PLACEMENT;

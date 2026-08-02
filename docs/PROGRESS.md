@@ -131,17 +131,17 @@ node tools/ci/assert-no-bundled-omc.mjs -> clean-room check passed
 
 ### What is implemented
 
-| Task                                                          | Status | Files                                                                                                      |
-| ------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------- |
-| Scene-graph contract (shapes, style, coordinate system)        | done   | `packages/contracts/src/scene.ts`                                                                          |
-| Annotation expression reader (tolerant, never throws)          | done   | `packages/modelica/src/annotation/parser.ts`                                                               |
-| Graphic record decoding (6 primitives + coordinate system)     | done   | `packages/modelica/src/annotation/graphics.ts`                                                             |
-| `Placement` / `Transformation` decoding and extent mirroring   | done   | `packages/modelica/src/annotation/placement.ts`                                                            |
-| Allowlisted annotation getters and raw-reply channel           | done   | `packages/omc/src/session/session.ts` (`callRaw`, `getIconAnnotation`, `getElementAnnotations`, …)          |
-| Deterministic scene-graph → SVG renderer                       | done   | `packages/ui/src/render/svg.ts`                                                                            |
-| Unit tests (reader, decoder, placement, renderer)              | done   | `packages/modelica/test/*.test.ts`, `packages/ui/test/svg.test.ts`                                         |
-| Live MSL decode test and end-to-end SVG baselines              | done   | `packages/modelica/test/annotation.integration.test.ts`, `packages/ui/test/iconPipeline.integration.test.ts`, `fixtures/baselines/icons/` |
-| Slice gate report                                              | done   | `docs/gate-reports/phase-2-slice-1.md`                                                                     |
+| Task                                                         | Status | Files                                                                                                                                     |
+| ------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Scene-graph contract (shapes, style, coordinate system)      | done   | `packages/contracts/src/scene.ts`                                                                                                         |
+| Annotation expression reader (tolerant, never throws)        | done   | `packages/modelica/src/annotation/parser.ts`                                                                                              |
+| Graphic record decoding (6 primitives + coordinate system)   | done   | `packages/modelica/src/annotation/graphics.ts`                                                                                            |
+| `Placement` / `Transformation` decoding and extent mirroring | done   | `packages/modelica/src/annotation/placement.ts`                                                                                           |
+| Allowlisted annotation getters and raw-reply channel         | done   | `packages/omc/src/session/session.ts` (`callRaw`, `getIconAnnotation`, `getElementAnnotations`, …)                                        |
+| Deterministic scene-graph → SVG renderer                     | done   | `packages/ui/src/render/svg.ts`                                                                                                           |
+| Unit tests (reader, decoder, placement, renderer)            | done   | `packages/modelica/test/*.test.ts`, `packages/ui/test/svg.test.ts`                                                                        |
+| Live MSL decode test and end-to-end SVG baselines            | done   | `packages/modelica/test/annotation.integration.test.ts`, `packages/ui/test/iconPipeline.integration.test.ts`, `fixtures/baselines/icons/` |
+| Slice gate report                                            | done   | `docs/gate-reports/phase-2-slice-1.md`                                                                                                    |
 
 ### The thing that had to be corrected by real evidence
 
@@ -176,6 +176,47 @@ Measured against the installed compiler: **211 shapes decoded from 24 classes in
    connection lines into a full diagram), then the Libraries/Models/Elements trees
    with search, and the reference DC motor fixture.
 3. Produce `docs/gate-reports/phase-2.md` before starting phase 3.
+
+---
+
+## Phase 2, slice 3 — connections and inheritance (complete)
+
+Gate report: `docs/gate-reports/phase-2-slice-3.md`. `pnpm lint` clean,
+`pnpm test` 130/130 with a real OpenModelica 1.27.0.
+
+Whole diagrams now compose: `buildDiagramScene` reads `getComponents` +
+`getElementAnnotations` (positional, `{}` for non-graphical elements), resolves
+each component's icon, applies its `Placement` transform, and decodes every
+`connect` equation's routed `Line`. `renderSceneGraph` emits one SVG group per
+component over layered `components` / `connections`.
+
+**The slice's real finding:** a fully green test suite still rendered the voltage
+source as a bare stub. `getIconAnnotation` returns a class's *own* layer only,
+and MSL builds most icons through `extends` — `StepVoltage`'s circle and `+`/`-`
+live two levels up the chain. `resolveIcon` now walks `getInheritedClasses`
+depth-first (base layers first, cycle-guarded, cached per class). Looking at the
+output caught what the assertions could not.
+
+### Evidence
+
+- `packages/modelica/test/builder.test.ts` — 15 tests over verbatim OMC replies.
+- `packages/ui/test/diagramPipeline.integration.test.ts` — 4 live-compiler tests;
+  `CauerLowPassAnalog` yields 11 components and exactly 16 connections.
+- `fixtures/baselines/diagrams/*.svg` — committed composed baselines.
+
+### Not yet done in this area
+
+- the renderer is still not mounted in the webview (pan/zoom/fit outstanding);
+- `%name` / `%R` placeholder substitution in `Text` is not performed;
+- connector instances are not drawn at diagram level.
+
+### Next slice (recommended order)
+
+1. **Phase 2 slice 2 (remainder)** — mount `renderSceneGraph` in the diagram
+   webview with pan/zoom/fit and pinned-Chromium pixel baselines.
+2. `%name` / parameter-value substitution in `Text` shapes.
+3. Libraries/Models/Elements trees with search, and the DC motor fixture.
+4. Produce `docs/gate-reports/phase-2.md` before starting phase 3.
 
 ---
 

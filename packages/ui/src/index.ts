@@ -9,3 +9,9 @@ export {
   type RenderOptions,
   type RenderedSvg,
 } from "./render/svg.js";
+export {
+  componentTransform,
+  renderSceneGraph,
+  type RenderedScene,
+  type SceneSvgOptions,
+} from "./render/scene.js";

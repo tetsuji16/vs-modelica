@@ -8,18 +8,18 @@ SVG rendering of the icon layer (`@modelica-studio/ui`).
 
 ## What was built
 
-| Area | Module | Purpose |
-| --- | --- | --- |
-| Contract | `packages/contracts/src/scene.ts` | Presentation-neutral scene graph: `Shape` union, `GraphicItemStyle`, `CoordinateSystem`, spec defaults. |
-| Decoder | `packages/modelica/src/annotation/parser.ts` | Tolerant reader for the Modelica annotation expression subset. Never throws. |
-| Decoder | `packages/modelica/src/annotation/graphics.ts` | `Line`/`Rectangle`/`Ellipse`/`Polygon`/`Text`/`Bitmap` → scene graph, plus coordinate system. |
-| Decoder | `packages/modelica/src/annotation/placement.ts` | `Placement` / `Transformation`, extent normalisation and mirroring. |
-| Session | `packages/omc/src/session/session.ts` | `callRaw` and allowlisted annotation getters (`getIconAnnotation`, `getDiagramAnnotation`, `getElementAnnotations`, `getNthConnection(Annotation)`, `getConnectionCount`). |
-| Renderer | `packages/ui/src/render/svg.ts` | Pure scene-graph → SVG renderer with a single y-axis flip. |
+| Area     | Module                                          | Purpose                                                                                                                                                                    |
+| -------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contract | `packages/contracts/src/scene.ts`               | Presentation-neutral scene graph: `Shape` union, `GraphicItemStyle`, `CoordinateSystem`, spec defaults.                                                                    |
+| Decoder  | `packages/modelica/src/annotation/parser.ts`    | Tolerant reader for the Modelica annotation expression subset. Never throws.                                                                                               |
+| Decoder  | `packages/modelica/src/annotation/graphics.ts`  | `Line`/`Rectangle`/`Ellipse`/`Polygon`/`Text`/`Bitmap` → scene graph, plus coordinate system.                                                                              |
+| Decoder  | `packages/modelica/src/annotation/placement.ts` | `Placement` / `Transformation`, extent normalisation and mirroring.                                                                                                        |
+| Session  | `packages/omc/src/session/session.ts`           | `callRaw` and allowlisted annotation getters (`getIconAnnotation`, `getDiagramAnnotation`, `getElementAnnotations`, `getNthConnection(Annotation)`, `getConnectionCount`). |
+| Renderer | `packages/ui/src/render/svg.ts`                 | Pure scene-graph → SVG renderer with a single y-axis flip.                                                                                                                 |
 
 ## Evidence
 
-### 1. The decoder was corrected *by* the real compiler
+### 1. The decoder was corrected _by_ the real compiler
 
 The first implementation assumed the named record form found in `.mo` source
 (`Rectangle(extent={{...}}, fillColor={...})`). Running it against the installed
@@ -83,23 +83,23 @@ clean-room      → no OpenModelica code or binaries are bundled
 
 ## Decisions taken during this slice
 
-* **Positional-first decoding.** Every graphic field is read by name *then* by
+- **Positional-first decoding.** Every graphic field is read by name _then_ by
   its specification index, so OMC replies and hand-written `.mo` annotations
   produce identical scene graphs.
-* **`missing` is a value, not an error.** A bare `-` means "keep the default";
+- **`missing` is a value, not an error.** A bare `-` means "keep the default";
   each field falls back independently rather than the whole record being rejected.
-* **Renderer is pure.** No clock, no randomness, no DOM. Same input → byte-identical
+- **Renderer is pure.** No clock, no randomness, no DOM. Same input → byte-identical
   SVG, which is what makes the baselines meaningful.
-* **One flip, at the root.** `scale(1,-1)` on the root group; text and bitmaps
+- **One flip, at the root.** `scale(1,-1)` on the root group; text and bitmaps
   carry a local counter-flip so glyphs stay upright.
-* **No fabricated geometry.** A partial `Ellipse` is drawn as an arc, not as a
+- **No fabricated geometry.** A partial `Ellipse` is drawn as an arc, not as a
   full ellipse; a `Line` with fewer than two points renders nothing.
 
 ## Known limitations (carried forward)
 
-* Hatch and gradient `fillPattern` values are approximated by their fill colour;
+- Hatch and gradient `fillPattern` values are approximated by their fill colour;
   the value is preserved in `data-fill-pattern` for a later pass.
-* `Bitmap` with `fileName` emits the raw path; resolving it against the library
+- `Bitmap` with `fileName` emits the raw path; resolving it against the library
   root belongs with the diagram document work.
-* Text extent-fitting uses an 80 % height heuristic; matching OMEdit's exact
+- Text extent-fitting uses an 80 % height heuristic; matching OMEdit's exact
   metrics needs font measurement in the webview.

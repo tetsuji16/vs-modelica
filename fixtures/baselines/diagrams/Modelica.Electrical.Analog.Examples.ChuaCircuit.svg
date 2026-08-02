@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200" width="900" height="900" preserveAspectRatio="xMidYMid meet" data-class="Modelica.Electrical.Analog.Examples.ChuaCircuit" data-view="diagram">
+  <g transform="scale(1,-1)">
+    <g class="mso-layer-components">
+    <g class="mso-component" data-instance="L" data-class="Modelica.Electrical.Analog.Basic.Inductor" transform="translate(-75,38) rotate(-270) scale(0.25,0.25)">
+      <polyline points="60,0 90,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="-90,0 -60,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <text x="0" y="-60" fill="#000000" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 -60" style="transform: scaleY(-1)">L=%L</text>
+      <path d="M -60 0 C -59.8333 1, -60.3333 3.6667, -59 6 C -57.6667 8.3333, -55.5 12.6667, -52 14 C -48.5 15.3333, -41.5 15.3333, -38 14 C -34.5 12.6667, -32.3333 8.3333, -31 6 C -29.6667 3.6667, -30.1667 1, -30 0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <path d="M -30 0 C -29.8333 1, -30.3333 3.6667, -29 6 C -27.6667 8.3333, -25.5 12.6667, -22 14 C -18.5 15.3333, -11.5 15.3333, -8 14 C -4.5 12.6667, -2.3333 8.3333, -1 6 C 0.3333 3.6667, -0.1667 1, 0 0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <path d="M 0 0 C 0.1667 1, -0.3333 3.6667, 1 6 C 2.3333 8.3333, 4.5 12.6667, 8 14 C 11.5 15.3333, 18.5 15.3333, 22 14 C 25.5 12.6667, 27.6667 8.3333, 29 6 C 30.3333 3.6667, 29.8333 1, 30 0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <path d="M 30 0 C 30.1667 1, 29.6667 3.6667, 31 6 C 32.3333 8.3333, 34.5 12.6667, 38 14 C 41.5 15.3333, 48.5 15.3333, 52 14 C 55.5 12.6667, 57.6667 8.3333, 59 6 C 60.3333 3.6667, 59.8333 1, 60 0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <text x="0" y="70" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 70" style="transform: scaleY(-1)">%name</text>
+    </g>
+    <g class="mso-component" data-instance="Ro" data-class="Modelica.Electrical.Analog.Basic.Resistor" transform="translate(-75,-17) rotate(-270) scale(0.25,0.25)">
+      <rect x="-70" y="-30" width="140" height="60" stroke="#0000ff" stroke-width="0.25" fill="#ffffff"/>
+      <polyline points="-90,0 -70,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="70,0 90,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <text x="0" y="-60" fill="#000000" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 -60" style="transform: scaleY(-1)">R=%R</text>
+      <text x="0" y="70" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 70" style="transform: scaleY(-1)">%name</text>
+    </g>
+    <g class="mso-component" data-instance="G" data-class="Modelica.Electrical.Analog.Basic.Conductor" transform="translate(0,63) scale(0.25,0.25)">
+      <rect x="-70" y="-30" width="140" height="60" stroke="#0000ff" stroke-width="0.25" fill="#ffffff"/>
+      <rect x="-70" y="-30" width="140" height="60" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="-90,0 -70,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="70,0 90,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <text x="0" y="-60" fill="#000000" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 -60" style="transform: scaleY(-1)">G=%G</text>
+      <text x="0" y="70" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 70" style="transform: scaleY(-1)">%name</text>
+    </g>
+    <g class="mso-component" data-instance="C1" data-class="Modelica.Electrical.Analog.Basic.Capacitor" transform="translate(25,3) rotate(-270) scale(0.25,0.25)">
+      <polyline points="-6,28 -6,-28" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="6,28 6,-28" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="-90,0 -6,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="6,0 90,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <text x="0" y="-60" fill="#000000" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 -60" style="transform: scaleY(-1)">C=%C</text>
+      <text x="0" y="70" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 70" style="transform: scaleY(-1)">%name</text>
+    </g>
+    <g class="mso-component" data-instance="C2" data-class="Modelica.Electrical.Analog.Basic.Capacitor" transform="translate(-25,3) rotate(-270) scale(0.25,0.25)">
+      <polyline points="-6,28 -6,-28" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="6,28 6,-28" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="-90,0 -6,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="6,0 90,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <text x="0" y="-60" fill="#000000" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 -60" style="transform: scaleY(-1)">C=%C</text>
+      <text x="0" y="70" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 70" style="transform: scaleY(-1)">%name</text>
+    </g>
+    <g class="mso-component" data-instance="Nr" data-class="Modelica.Electrical.Analog.Examples.Utilities.NonlinearResistor" transform="translate(75,3) rotate(-270) scale(0.25,0.25)">
+      <rect x="-70" y="-30" width="140" height="60" stroke="#0000ff" stroke-width="0.25" fill="#ffffff"/>
+      <polyline points="-90,0 -70,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="70,0 90,0" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="-50,-60 50,60" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polygon points="50,60 38,52 44,46 50,60" stroke="#0000ff" stroke-width="0.25" fill="#0000ff"/>
+      <text x="-10" y="90" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="-10 90" style="transform: scaleY(-1)">%name</text>
+    </g>
+    <g class="mso-component" data-instance="Gnd" data-class="Modelica.Electrical.Analog.Basic.Ground" transform="translate(0,-87) scale(0.25,0.25)">
+      <polyline points="-60,50 60,50" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="-40,30 40,30" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="-20,10 20,10" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <polyline points="0,90 0,50" stroke="#0000ff" stroke-width="0.25" fill="none"/>
+      <text x="0" y="-30" fill="#0000ff" font-size="32" text-anchor="middle" dominant-baseline="central" transform-origin="0 -30" style="transform: scaleY(-1)">%name</text>
+    </g>
+    </g>
+    <g class="mso-layer-connections">
+    <g class="mso-connection" data-from="L.n" data-to="Ro.p"><polyline points="-75,13 -75,8" stroke="#000000" stroke-width="0.25" fill="none"/></g>
+    <g class="mso-connection" data-from="C2.p" data-to="G.p"><polyline points="-25,28 -25,45.5 -25,45.5 -25,63" stroke="#0000ff" stroke-width="0.25" fill="none"/></g>
+    <g class="mso-connection" data-from="L.p" data-to="G.p"><polyline points="-75,63 -25,63" stroke="#0000ff" stroke-width="0.25" fill="none"/></g>
+    <g class="mso-connection" data-from="G.n" data-to="Nr.p"><polyline points="25,63 75,63 75,28" stroke="#0000ff" stroke-width="0.25" fill="none"/></g>
+    <g class="mso-connection" data-from="C1.p" data-to="G.n"><polyline points="25,28 25,45.5 25,45.5 25,63" stroke="#0000ff" stroke-width="0.25" fill="none"/></g>
+    <g class="mso-connection" data-from="Ro.n" data-to="Gnd.p"><polyline points="-75,-42 -75,-62 0,-62" stroke="#0000ff" stroke-width="0.25" fill="none"/></g>
+    <g class="mso-connection" data-from="C2.n" data-to="Gnd.p"><polyline points="-25,-22 -24,-22 -24,-62 0,-62" stroke="#0000ff" stroke-width="0.25" fill="none"/></g>
+    <g class="mso-connection" data-from="Gnd.p" data-to="C1.n"><polyline points="0,-62 25,-62 25,-22" stroke="#0000ff" stroke-width="0.25" fill="none"/></g>
+    <g class="mso-connection" data-from="Gnd.p" data-to="Nr.n"><polyline points="0,-62 75,-62 75,-22" stroke="#0000ff" stroke-width="0.25" fill="none"/></g>
+    </g>
+  </g>
+</svg>

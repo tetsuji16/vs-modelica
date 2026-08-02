@@ -257,6 +257,7 @@
   },
   "dependencies": {
     "@modelica-studio/contracts": "workspace:*",
+    "@modelica-studio/modelica": "workspace:*",
     "@modelica-studio/omc": "workspace:*",
     "@modelica-studio/ui": "workspace:*"
   },

@@ -35,6 +35,9 @@ importers:
       '@modelica-studio/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@modelica-studio/modelica':
+        specifier: workspace:*
+        version: link:../../packages/modelica
       '@modelica-studio/omc':
         specifier: workspace:*
         version: link:../../packages/omc

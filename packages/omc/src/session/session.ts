@@ -34,6 +34,7 @@ export const ALLOWED_FUNCTIONS = [
   "checkModel",
   "getComponents",
   "getElementAnnotations",
+  "getInheritedClasses",
   "getConnectionCount",
   "getNthConnection",
   "getNthConnectionAnnotation",
