@@ -40,6 +40,15 @@ export type DomainOperation =
     }
   | { readonly kind: "removeComponent"; readonly instanceName: string }
   | {
+      // Expressed as a delta rather than an absolute position on purpose: the
+      // patch engine rewrites the existing extent in place, so a drag never has
+      // to reconstruct — and therefore never reformats — the whole Placement.
+      readonly kind: "moveComponent";
+      readonly instanceName: string;
+      readonly dx: number;
+      readonly dy: number;
+    }
+  | {
       readonly kind: "connect";
       readonly from: string;
       readonly to: string;

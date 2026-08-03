@@ -63,3 +63,7 @@ jobs:
         env:
           MODELICA_STUDIO_REQUIRE_OMC: "1"
         run: pnpm sample
+      - name: Check that a patched model still compiles
+        env:
+          MODELICA_STUDIO_REQUIRE_OMC: "1"
+        run: pnpm sample:edit

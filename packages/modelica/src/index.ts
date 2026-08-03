@@ -26,6 +26,22 @@ export {
   type Transformation,
 } from "./annotation/placement.js";
 export {
+  scanClass,
+  scanComponents,
+  type ClassSpan,
+  type ComponentSpan,
+  type PlacementSpan,
+} from "./edit/scanner.js";
+export {
+  applyEdits,
+  applyOperations,
+  StaleRevisionError,
+  TargetNotFoundError,
+  UnsupportedOperationError,
+  type PatchResult,
+  type TextEdit,
+} from "./edit/patch.js";
+export {
   buildDiagramScene,
   buildIconScene,
   decodeComponents,

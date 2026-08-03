@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "sample": "node tools/run-sample.mjs",
+    "sample:edit": "node tools/run-edit-check.mjs",
     "test:visual": "node tools/visual/capture.mjs",
     "test:visual:update": "node tools/visual/capture.mjs --update",
     "clean": "pnpm -r clean"
