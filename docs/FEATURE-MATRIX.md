@@ -30,7 +30,9 @@ Status values: `not started`, `in progress`, `shell` (UI/boundary exists, behavi
 | Diagram         | Annotation decoder, scene graph, SVG renderer                        | 2     | done        | `packages/modelica/test/*`, `pnpm test:visual`                                           |
 | Diagram         | Pan/zoom, grid, working extent, tool rail                            | 2     | done        | `packages/ui/test/{viewport,extentGeometry}.test.ts`                                     |
 | Sample          | End-to-end model: check, simulate, asserted results                  | 2     | done        | `pnpm sample`, `samples/README.md`                                                       |
-| Editing         | Lossless CST and source patch engine                                 | 3     | not started | —                                                                                        |
+| Editing         | Error-tolerant CST scanner (stable source ranges)                    | 3     | done        | `packages/modelica/test/scanner.test.ts`                                                 |
+| Editing         | Lossless patch engine, minimal diffs, atomic batches                 | 3     | done        | `packages/modelica/test/patch.test.ts`, `patch.property.test.ts`, `pnpm sample:edit`     |
+| Editing         | Selection, transforms, undo/redo, wiring UI                          | 3     | not started | —                                                                                        |
 | Simulation      | Build/run/cancel, results tree                                       | 4     | not started | —                                                                                        |
 | Plotting        | Figures workbench                                                    | 5     | not started | —                                                                                        |
 | AI              | Ollama/OpenRouter providers, proposals, canvas popover               | 6     | not started | —                                                                                        |

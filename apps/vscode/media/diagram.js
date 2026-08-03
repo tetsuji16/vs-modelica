@@ -7,25 +7,37 @@
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __getProtoOf = Object.getPrototypeOf;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __commonJS = (cb, mod) => function __require() {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-  };
+  var __commonJS = (cb, mod) =>
+    function __require() {
+      return (
+        mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod),
+        mod.exports
+      );
+    };
   var __copyProps = (to, from, except, desc) => {
-    if (from && typeof from === "object" || typeof from === "function") {
+    if ((from && typeof from === "object") || typeof from === "function") {
       for (let key of __getOwnPropNames(from))
         if (!__hasOwnProp.call(to, key) && key !== except)
-          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+          __defProp(to, key, {
+            get: () => from[key],
+            enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
+          });
     }
     return to;
   };
-  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-    // If the importer is in node compatibility mode or this is not an ESM
-    // file that has been converted to a CommonJS file using a Babel-
-    // compatible transform (i.e. "__esModule" has not been set), then set
-    // "default" to the CommonJS "module.exports" for node compatibility.
-    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-    mod
-  ));
+  var __toESM = (mod, isNodeMode, target) => (
+    (target = mod != null ? __create(__getProtoOf(mod)) : {}),
+    __copyProps(
+      // If the importer is in node compatibility mode or this is not an ESM
+      // file that has been converted to a CommonJS file using a Babel-
+      // compatible transform (i.e. "__esModule" has not been set), then set
+      // "default" to the CommonJS "module.exports" for node compatibility.
+      isNodeMode || !mod || !mod.__esModule
+        ? __defProp(target, "default", { value: mod, enumerable: true })
+        : target,
+      mod,
+    )
+  );
 
   // ../../packages/ui/dist/tokens.js
   var require_tokens = __commonJS({
@@ -62,7 +74,7 @@
         "--mso-description-fg": "var(--vscode-descriptionForeground)",
         "--mso-font": "var(--vscode-font-family)",
         "--mso-font-size": "var(--vscode-font-size)",
-        "--mso-editor-font": "var(--vscode-editor-font-family)"
+        "--mso-editor-font": "var(--vscode-editor-font-family)",
       });
       exports.LAYOUT = Object.freeze({
         /** Floating left tool rail width in CSS pixels (+-3 px tolerance). */
@@ -72,18 +84,20 @@
         /** Reference secondary (AI) sidebar width in CSS pixels (+-24 px tolerance). */
         secondarySidebarWidth: 430,
         /** Reference capture viewport used by the visual harness. */
-        referenceViewport: Object.freeze({ width: 2048, height: 1153 })
+        referenceViewport: Object.freeze({ width: 2048, height: 1153 }),
       });
       exports.LAYOUT_TOKENS = Object.freeze({
-        "--mso-tool-rail-width": `${exports.LAYOUT.toolRailWidth}px`
+        "--mso-tool-rail-width": `${exports.LAYOUT.toolRailWidth}px`,
       });
       function renderTokenCss(tokens = { ...exports.DESIGN_TOKENS, ...exports.LAYOUT_TOKENS }) {
-        const body = Object.entries(tokens).map(([name, value]) => `  ${name}: ${value};`).join("\n");
+        const body = Object.entries(tokens)
+          .map(([name, value]) => `  ${name}: ${value};`)
+          .join("\n");
         return `:root {
 ${body}
 }`;
       }
-    }
+    },
   });
 
   // ../../packages/ui/dist/sections.js
@@ -96,35 +110,35 @@ ${body}
         {
           id: "modelicaStudio.libraries",
           title: "Libraries",
-          emptyState: "No Modelica libraries are loaded yet."
+          emptyState: "No Modelica libraries are loaded yet.",
         },
         {
           id: "modelicaStudio.models",
           title: "Models",
-          emptyState: "No Modelica models were found in this workspace."
+          emptyState: "No Modelica models were found in this workspace.",
         },
         {
           id: "modelicaStudio.results",
           title: "Results",
-          emptyState: "No simulation has produced results yet."
+          emptyState: "No simulation has produced results yet.",
         },
         {
           id: "modelicaStudio.figures",
           title: "Figures",
-          emptyState: "No figures have been created yet."
+          emptyState: "No figures have been created yet.",
         },
         {
           id: "modelicaStudio.documents",
           title: "Documents",
-          emptyState: "No documents are attached to this workspace."
+          emptyState: "No documents are attached to this workspace.",
         },
         {
           id: "modelicaStudio.elements",
           title: "Elements",
-          emptyState: "Open a Modelica class to inspect its elements."
-        }
+          emptyState: "Open a Modelica class to inspect its elements.",
+        },
       ]);
-    }
+    },
   });
 
   // ../../packages/ui/dist/render/svg.js
@@ -146,17 +160,25 @@ ${body}
         return Object.is(rounded, -0) ? "0" : String(rounded);
       }
       function colour({ r, g, b }) {
-        const channel = (value) => Math.min(255, Math.max(0, Math.round(value))).toString(16).padStart(2, "0");
+        const channel = (value) =>
+          Math.min(255, Math.max(0, Math.round(value)))
+            .toString(16)
+            .padStart(2, "0");
         return `#${channel(r)}${channel(g)}${channel(b)}`;
       }
       function escapeXml(value) {
-        return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+        return value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
       }
       var DASH_ARRAYS = {
         Dash: "6,3",
         Dot: "1,3",
         DashDot: "6,3,1,3",
-        DashDotDot: "6,3,1,3,1,3"
+        DashDotDot: "6,3,1,3,1,3",
       };
       function paint(style, forceNoFill = false) {
         const attributes = [];
@@ -197,7 +219,7 @@ ${body}
           x,
           y,
           width: Math.abs(extent2.max.x - extent2.min.x),
-          height: Math.abs(extent2.max.y - extent2.min.y)
+          height: Math.abs(extent2.max.y - extent2.min.y),
         };
       }
       function polyline(points) {
@@ -215,7 +237,9 @@ ${body}
           const p3 = points[Math.min(index + 2, points.length - 1)];
           const c1 = { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 };
           const c2 = { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 };
-          segments.push(`C ${num(c1.x)} ${num(c1.y)}, ${num(c2.x)} ${num(c2.y)}, ${num(p2.x)} ${num(p2.y)}`);
+          segments.push(
+            `C ${num(c1.x)} ${num(c1.y)}, ${num(c2.x)} ${num(c2.y)}, ${num(p2.x)} ${num(p2.y)}`,
+          );
         }
         return segments.join(" ");
       }
@@ -240,7 +264,8 @@ ${body}
           }
           case "rectangle": {
             const box = normalise(shape.extent);
-            const radius = shape.radius > 0 ? ` rx="${num(shape.radius)}" ry="${num(shape.radius)}"` : "";
+            const radius =
+              shape.radius > 0 ? ` rx="${num(shape.radius)}" ry="${num(shape.radius)}"` : "";
             return `<rect${tf} x="${num(box.x)}" y="${num(box.y)}" width="${num(box.width)}" height="${num(box.height)}"${radius} ${paint(shape.style)}/>`;
           }
           case "ellipse": {
@@ -253,14 +278,14 @@ ${body}
             if (full) {
               return `<ellipse${tf} cx="${num(cx)}" cy="${num(cy)}" rx="${num(rx)}" ry="${num(ry)}" ${paint(shape.style)}/>`;
             }
-            const toRadians = (degrees) => degrees * Math.PI / 180;
+            const toRadians = (degrees) => (degrees * Math.PI) / 180;
             const start = {
               x: cx + rx * Math.cos(toRadians(shape.startAngle)),
-              y: cy + ry * Math.sin(toRadians(shape.startAngle))
+              y: cy + ry * Math.sin(toRadians(shape.startAngle)),
             };
             const end = {
               x: cx + rx * Math.cos(toRadians(shape.endAngle)),
-              y: cy + ry * Math.sin(toRadians(shape.endAngle))
+              y: cy + ry * Math.sin(toRadians(shape.endAngle)),
             };
             const largeArc = Math.abs(shape.endAngle - shape.startAngle) > 180 ? 1 : 0;
             const sweep = shape.endAngle > shape.startAngle ? 1 : 0;
@@ -283,17 +308,27 @@ ${body}
             }
             const size2 = shape.fontSize > 0 ? shape.fontSize : Math.max(box.height * 0.8, 1);
             const anchor = ANCHORS[shape.horizontalAlignment] ?? "middle";
-            const x = shape.horizontalAlignment === "Left" ? box.x : shape.horizontalAlignment === "Right" ? box.x + box.width : box.x + box.width / 2;
+            const x =
+              shape.horizontalAlignment === "Left"
+                ? box.x
+                : shape.horizontalAlignment === "Right"
+                  ? box.x + box.width
+                  : box.x + box.width / 2;
             const y = box.y + box.height / 2;
             const font = shape.fontName === "" ? "" : ` font-family="${escapeXml(shape.fontName)}"`;
             const weight = shape.textStyle.includes("Bold") ? ' font-weight="bold"' : "";
             const italic = shape.textStyle.includes("Italic") ? ' font-style="italic"' : "";
-            const underline = shape.textStyle.includes("UnderLine") ? ' text-decoration="underline"' : "";
+            const underline = shape.textStyle.includes("UnderLine")
+              ? ' text-decoration="underline"'
+              : "";
             return `<text${tf} x="${num(x)}" y="${num(y)}" fill="${colour(shape.textColour)}" font-size="${num(size2)}"${font}${weight}${italic}${underline} text-anchor="${anchor}" dominant-baseline="central" transform-origin="${num(x)} ${num(y)}" style="transform: scaleY(-1)">${escapeXml(shape.text)}</text>`;
           }
           case "bitmap": {
             const box = normalise(shape.extent);
-            const href = shape.imageSource !== void 0 && shape.imageSource !== "" ? `data:image;base64,${shape.imageSource}` : shape.fileName ?? "";
+            const href =
+              shape.imageSource !== void 0 && shape.imageSource !== ""
+                ? `data:image;base64,${shape.imageSource}`
+                : (shape.fileName ?? "");
             if (href === "") {
               return "";
             }
@@ -306,15 +341,18 @@ ${body}
         const system = normalise(coordinateSystem.extent);
         const viewBox = {
           min: { x: system.x - padding, y: system.y - padding },
-          max: { x: system.x + system.width + padding, y: system.y + system.height + padding }
+          max: { x: system.x + system.width + padding, y: system.y + system.height + padding },
         };
         const boxWidth = Math.max(viewBox.max.x - viewBox.min.x, 1);
         const boxHeight = Math.max(viewBox.max.y - viewBox.min.y, 1);
         const width = options.width ?? boxWidth;
-        const height = width * boxHeight / boxWidth;
+        const height = (width * boxHeight) / boxWidth;
         const aspect = coordinateSystem.preserveAspectRatio ? "xMidYMid meet" : "none";
         const name = options.name === void 0 ? "" : ` data-name="${escapeXml(options.name)}"`;
-        const body = shapes.map((shape) => renderShape(shape)).filter((markup) => markup !== "").join("\n    ");
+        const body = shapes
+          .map((shape) => renderShape(shape))
+          .filter((markup) => markup !== "")
+          .join("\n    ");
         return {
           svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${num(viewBox.min.x)} ${num(-viewBox.max.y)} ${num(boxWidth)} ${num(boxHeight)}" width="${num(width)}" height="${num(height)}" preserveAspectRatio="${aspect}"${name}>
   <g transform="scale(1,-1)">
@@ -323,10 +361,10 @@ ${body}
 </svg>`,
           width,
           height,
-          viewBox
+          viewBox,
         };
       }
-    }
+    },
   });
 
   // ../../packages/ui/dist/render/scene.js
@@ -344,7 +382,7 @@ ${body}
           x,
           y,
           width: Math.abs(extent2.max.x - extent2.min.x),
-          height: Math.abs(extent2.max.y - extent2.min.y)
+          height: Math.abs(extent2.max.y - extent2.min.y),
         };
       }
       function componentTransform(component) {
@@ -352,12 +390,12 @@ ${body}
         const target = {
           min: {
             x: component.origin.x + component.extent.min.x,
-            y: component.origin.y + component.extent.min.y
+            y: component.origin.y + component.extent.min.y,
           },
           max: {
             x: component.origin.x + component.extent.max.x,
-            y: component.origin.y + component.extent.max.y
-          }
+            y: component.origin.y + component.extent.max.y,
+          },
         };
         const box = span(target);
         const scaleX = source.width === 0 ? 1 : box.width / source.width;
@@ -371,10 +409,14 @@ ${body}
           parts.push(`rotate(${(0, svg_js_1.num)(-component.rotation)})`);
         }
         if (scaleX * signX !== 1 || scaleY * signY !== 1) {
-          parts.push(`scale(${(0, svg_js_1.num)(scaleX * signX)},${(0, svg_js_1.num)(scaleY * signY)})`);
+          parts.push(
+            `scale(${(0, svg_js_1.num)(scaleX * signX)},${(0, svg_js_1.num)(scaleY * signY)})`,
+          );
         }
         if (sourceCentre.x !== 0 || sourceCentre.y !== 0) {
-          parts.push(`translate(${(0, svg_js_1.num)(-sourceCentre.x)},${(0, svg_js_1.num)(-sourceCentre.y)})`);
+          parts.push(
+            `translate(${(0, svg_js_1.num)(-sourceCentre.x)},${(0, svg_js_1.num)(-sourceCentre.y)})`,
+          );
         }
         return parts.join(" ");
       }
@@ -382,7 +424,10 @@ ${body}
         if (!component.visible) {
           return "";
         }
-        const body = component.icon.map((shape) => (0, svg_js_1.renderShape)(shape)).filter((markup) => markup !== "").join("\n      ");
+        const body = component.icon
+          .map((shape) => (0, svg_js_1.renderShape)(shape))
+          .filter((markup) => markup !== "")
+          .join("\n      ");
         if (body === "") {
           return "";
         }
@@ -395,32 +440,39 @@ ${body}
         const system = span(scene.coordinateSystem.extent);
         const viewBox = {
           min: { x: system.x - padding, y: system.y - padding },
-          max: { x: system.x + system.width + padding, y: system.y + system.height + padding }
+          max: { x: system.x + system.width + padding, y: system.y + system.height + padding },
         };
         const boxWidth = Math.max(viewBox.max.x - viewBox.min.x, 1);
         const boxHeight = Math.max(viewBox.max.y - viewBox.min.y, 1);
         const width = options.width ?? boxWidth;
-        const height = width * boxHeight / boxWidth;
+        const height = (width * boxHeight) / boxWidth;
         const layers = [];
-        const own = scene.shapes.map((shape) => (0, svg_js_1.renderShape)(shape)).filter((markup) => markup !== "").join("\n      ");
+        const own = scene.shapes
+          .map((shape) => (0, svg_js_1.renderShape)(shape))
+          .filter((markup) => markup !== "")
+          .join("\n      ");
         if (own !== "") {
           layers.push(`<g class="mso-layer-graphics">
       ${own}
     </g>`);
         }
-        const components = scene.components.map((component) => renderComponent(component)).filter((markup) => markup !== "");
+        const components = scene.components
+          .map((component) => renderComponent(component))
+          .filter((markup) => markup !== "");
         if (components.length > 0) {
           layers.push(`<g class="mso-layer-components">
     ${components.join("\n    ")}
     </g>`);
         }
-        const connections = scene.connections.map((connection) => {
-          const markup = (0, svg_js_1.renderShape)(connection.shape);
-          if (markup === "") {
-            return "";
-          }
-          return `<g class="mso-connection" data-from="${(0, svg_js_1.escapeXml)(connection.from)}" data-to="${(0, svg_js_1.escapeXml)(connection.to)}">${markup}</g>`;
-        }).filter((markup) => markup !== "");
+        const connections = scene.connections
+          .map((connection) => {
+            const markup = (0, svg_js_1.renderShape)(connection.shape);
+            if (markup === "") {
+              return "";
+            }
+            return `<g class="mso-connection" data-from="${(0, svg_js_1.escapeXml)(connection.from)}" data-to="${(0, svg_js_1.escapeXml)(connection.to)}">${markup}</g>`;
+          })
+          .filter((markup) => markup !== "");
         if (connections.length > 0) {
           layers.push(`<g class="mso-layer-connections">
     ${connections.join("\n    ")}
@@ -435,10 +487,10 @@ ${body}
 </svg>`,
           width,
           height,
-          viewBox
+          viewBox,
         };
       }
-    }
+    },
   });
 
   // ../../packages/ui/dist/view/viewport.js
@@ -446,7 +498,15 @@ ${body}
     "../../packages/ui/dist/view/viewport.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.GRID_MINOR_MIN_PX = exports.GRID_MAJOR_STEP = exports.GRID_MINOR_STEP = exports.IDENTITY_VIEWPORT = exports.ZOOM_STEP = exports.FIT_PADDING = exports.MAX_SCALE = exports.MIN_SCALE = void 0;
+      exports.GRID_MINOR_MIN_PX =
+        exports.GRID_MAJOR_STEP =
+        exports.GRID_MINOR_STEP =
+        exports.IDENTITY_VIEWPORT =
+        exports.ZOOM_STEP =
+        exports.FIT_PADDING =
+        exports.MAX_SCALE =
+        exports.MIN_SCALE =
+          void 0;
       exports.clampScale = clampScale;
       exports.fitViewport = fitViewport2;
       exports.zoomAt = zoomAt2;
@@ -467,16 +527,25 @@ ${body}
         return Math.min(exports.MAX_SCALE, Math.max(exports.MIN_SCALE, scale));
       }
       function fitViewport2(content2, size2, padding = exports.FIT_PADDING) {
-        if (!Number.isFinite(content2.width) || !Number.isFinite(content2.height) || content2.width <= 0 || content2.height <= 0 || size2.width <= 0 || size2.height <= 0) {
+        if (
+          !Number.isFinite(content2.width) ||
+          !Number.isFinite(content2.height) ||
+          content2.width <= 0 ||
+          content2.height <= 0 ||
+          size2.width <= 0 ||
+          size2.height <= 0
+        ) {
           return exports.IDENTITY_VIEWPORT;
         }
         const usableWidth = size2.width * (1 - 2 * padding);
         const usableHeight = size2.height * (1 - 2 * padding);
-        const scale = clampScale(Math.min(usableWidth / content2.width, usableHeight / content2.height));
+        const scale = clampScale(
+          Math.min(usableWidth / content2.width, usableHeight / content2.height),
+        );
         return {
           scale,
           x: (size2.width - content2.width * scale) / 2,
-          y: (size2.height - content2.height * scale) / 2
+          y: (size2.height - content2.height * scale) / 2,
         };
       }
       function zoomAt2(view2, factor, pointer) {
@@ -488,7 +557,7 @@ ${body}
         return {
           scale: target,
           x: pointer.x - (pointer.x - view2.x) * ratio,
-          y: pointer.y - (pointer.y - view2.y) * ratio
+          y: pointer.y - (pointer.y - view2.y) * ratio,
         };
       }
       function zoomBy2(view2, factor, size2) {
@@ -516,7 +585,7 @@ ${body}
           minorPx,
           majorPx: exports.GRID_MAJOR_STEP * view2.scale,
           minorVisible: minorPx >= exports.GRID_MINOR_MIN_PX,
-          visible: content2.width > 0 && content2.height > 0
+          visible: content2.width > 0 && content2.height > 0,
         };
       }
       function formatZoom2(view2) {
@@ -525,7 +594,7 @@ ${body}
       function round(value) {
         return Math.round(value * 1e4) / 1e4;
       }
-    }
+    },
   });
 
   // ../../packages/ui/dist/index.js
@@ -533,94 +602,202 @@ ${body}
     "../../packages/ui/dist/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.zoomBy = exports.zoomAt = exports.toCssTransform = exports.panBy = exports.formatZoom = exports.fitViewport = exports.extentGeometry = exports.clampScale = exports.ZOOM_STEP = exports.MIN_SCALE = exports.MAX_SCALE = exports.IDENTITY_VIEWPORT = exports.GRID_MINOR_STEP = exports.GRID_MINOR_MIN_PX = exports.GRID_MAJOR_STEP = exports.FIT_PADDING = exports.renderSceneGraph = exports.componentTransform = exports.renderShape = exports.renderScene = exports.num = exports.escapeXml = exports.colour = exports.SIDEBAR_SECTIONS = exports.renderTokenCss = exports.LAYOUT = exports.DESIGN_TOKENS = void 0;
+      exports.zoomBy =
+        exports.zoomAt =
+        exports.toCssTransform =
+        exports.panBy =
+        exports.formatZoom =
+        exports.fitViewport =
+        exports.extentGeometry =
+        exports.clampScale =
+        exports.ZOOM_STEP =
+        exports.MIN_SCALE =
+        exports.MAX_SCALE =
+        exports.IDENTITY_VIEWPORT =
+        exports.GRID_MINOR_STEP =
+        exports.GRID_MINOR_MIN_PX =
+        exports.GRID_MAJOR_STEP =
+        exports.FIT_PADDING =
+        exports.renderSceneGraph =
+        exports.componentTransform =
+        exports.renderShape =
+        exports.renderScene =
+        exports.num =
+        exports.escapeXml =
+        exports.colour =
+        exports.SIDEBAR_SECTIONS =
+        exports.renderTokenCss =
+        exports.LAYOUT =
+        exports.DESIGN_TOKENS =
+          void 0;
       var tokens_js_1 = require_tokens();
-      Object.defineProperty(exports, "DESIGN_TOKENS", { enumerable: true, get: function() {
-        return tokens_js_1.DESIGN_TOKENS;
-      } });
-      Object.defineProperty(exports, "LAYOUT", { enumerable: true, get: function() {
-        return tokens_js_1.LAYOUT;
-      } });
-      Object.defineProperty(exports, "renderTokenCss", { enumerable: true, get: function() {
-        return tokens_js_1.renderTokenCss;
-      } });
+      Object.defineProperty(exports, "DESIGN_TOKENS", {
+        enumerable: true,
+        get: function () {
+          return tokens_js_1.DESIGN_TOKENS;
+        },
+      });
+      Object.defineProperty(exports, "LAYOUT", {
+        enumerable: true,
+        get: function () {
+          return tokens_js_1.LAYOUT;
+        },
+      });
+      Object.defineProperty(exports, "renderTokenCss", {
+        enumerable: true,
+        get: function () {
+          return tokens_js_1.renderTokenCss;
+        },
+      });
       var sections_js_1 = require_sections();
-      Object.defineProperty(exports, "SIDEBAR_SECTIONS", { enumerable: true, get: function() {
-        return sections_js_1.SIDEBAR_SECTIONS;
-      } });
+      Object.defineProperty(exports, "SIDEBAR_SECTIONS", {
+        enumerable: true,
+        get: function () {
+          return sections_js_1.SIDEBAR_SECTIONS;
+        },
+      });
       var svg_js_1 = require_svg();
-      Object.defineProperty(exports, "colour", { enumerable: true, get: function() {
-        return svg_js_1.colour;
-      } });
-      Object.defineProperty(exports, "escapeXml", { enumerable: true, get: function() {
-        return svg_js_1.escapeXml;
-      } });
-      Object.defineProperty(exports, "num", { enumerable: true, get: function() {
-        return svg_js_1.num;
-      } });
-      Object.defineProperty(exports, "renderScene", { enumerable: true, get: function() {
-        return svg_js_1.renderScene;
-      } });
-      Object.defineProperty(exports, "renderShape", { enumerable: true, get: function() {
-        return svg_js_1.renderShape;
-      } });
+      Object.defineProperty(exports, "colour", {
+        enumerable: true,
+        get: function () {
+          return svg_js_1.colour;
+        },
+      });
+      Object.defineProperty(exports, "escapeXml", {
+        enumerable: true,
+        get: function () {
+          return svg_js_1.escapeXml;
+        },
+      });
+      Object.defineProperty(exports, "num", {
+        enumerable: true,
+        get: function () {
+          return svg_js_1.num;
+        },
+      });
+      Object.defineProperty(exports, "renderScene", {
+        enumerable: true,
+        get: function () {
+          return svg_js_1.renderScene;
+        },
+      });
+      Object.defineProperty(exports, "renderShape", {
+        enumerable: true,
+        get: function () {
+          return svg_js_1.renderShape;
+        },
+      });
       var scene_js_1 = require_scene();
-      Object.defineProperty(exports, "componentTransform", { enumerable: true, get: function() {
-        return scene_js_1.componentTransform;
-      } });
-      Object.defineProperty(exports, "renderSceneGraph", { enumerable: true, get: function() {
-        return scene_js_1.renderSceneGraph;
-      } });
+      Object.defineProperty(exports, "componentTransform", {
+        enumerable: true,
+        get: function () {
+          return scene_js_1.componentTransform;
+        },
+      });
+      Object.defineProperty(exports, "renderSceneGraph", {
+        enumerable: true,
+        get: function () {
+          return scene_js_1.renderSceneGraph;
+        },
+      });
       var viewport_js_1 = require_viewport();
-      Object.defineProperty(exports, "FIT_PADDING", { enumerable: true, get: function() {
-        return viewport_js_1.FIT_PADDING;
-      } });
-      Object.defineProperty(exports, "GRID_MAJOR_STEP", { enumerable: true, get: function() {
-        return viewport_js_1.GRID_MAJOR_STEP;
-      } });
-      Object.defineProperty(exports, "GRID_MINOR_MIN_PX", { enumerable: true, get: function() {
-        return viewport_js_1.GRID_MINOR_MIN_PX;
-      } });
-      Object.defineProperty(exports, "GRID_MINOR_STEP", { enumerable: true, get: function() {
-        return viewport_js_1.GRID_MINOR_STEP;
-      } });
-      Object.defineProperty(exports, "IDENTITY_VIEWPORT", { enumerable: true, get: function() {
-        return viewport_js_1.IDENTITY_VIEWPORT;
-      } });
-      Object.defineProperty(exports, "MAX_SCALE", { enumerable: true, get: function() {
-        return viewport_js_1.MAX_SCALE;
-      } });
-      Object.defineProperty(exports, "MIN_SCALE", { enumerable: true, get: function() {
-        return viewport_js_1.MIN_SCALE;
-      } });
-      Object.defineProperty(exports, "ZOOM_STEP", { enumerable: true, get: function() {
-        return viewport_js_1.ZOOM_STEP;
-      } });
-      Object.defineProperty(exports, "clampScale", { enumerable: true, get: function() {
-        return viewport_js_1.clampScale;
-      } });
-      Object.defineProperty(exports, "extentGeometry", { enumerable: true, get: function() {
-        return viewport_js_1.extentGeometry;
-      } });
-      Object.defineProperty(exports, "fitViewport", { enumerable: true, get: function() {
-        return viewport_js_1.fitViewport;
-      } });
-      Object.defineProperty(exports, "formatZoom", { enumerable: true, get: function() {
-        return viewport_js_1.formatZoom;
-      } });
-      Object.defineProperty(exports, "panBy", { enumerable: true, get: function() {
-        return viewport_js_1.panBy;
-      } });
-      Object.defineProperty(exports, "toCssTransform", { enumerable: true, get: function() {
-        return viewport_js_1.toCssTransform;
-      } });
-      Object.defineProperty(exports, "zoomAt", { enumerable: true, get: function() {
-        return viewport_js_1.zoomAt;
-      } });
-      Object.defineProperty(exports, "zoomBy", { enumerable: true, get: function() {
-        return viewport_js_1.zoomBy;
-      } });
-    }
+      Object.defineProperty(exports, "FIT_PADDING", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.FIT_PADDING;
+        },
+      });
+      Object.defineProperty(exports, "GRID_MAJOR_STEP", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.GRID_MAJOR_STEP;
+        },
+      });
+      Object.defineProperty(exports, "GRID_MINOR_MIN_PX", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.GRID_MINOR_MIN_PX;
+        },
+      });
+      Object.defineProperty(exports, "GRID_MINOR_STEP", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.GRID_MINOR_STEP;
+        },
+      });
+      Object.defineProperty(exports, "IDENTITY_VIEWPORT", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.IDENTITY_VIEWPORT;
+        },
+      });
+      Object.defineProperty(exports, "MAX_SCALE", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.MAX_SCALE;
+        },
+      });
+      Object.defineProperty(exports, "MIN_SCALE", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.MIN_SCALE;
+        },
+      });
+      Object.defineProperty(exports, "ZOOM_STEP", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.ZOOM_STEP;
+        },
+      });
+      Object.defineProperty(exports, "clampScale", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.clampScale;
+        },
+      });
+      Object.defineProperty(exports, "extentGeometry", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.extentGeometry;
+        },
+      });
+      Object.defineProperty(exports, "fitViewport", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.fitViewport;
+        },
+      });
+      Object.defineProperty(exports, "formatZoom", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.formatZoom;
+        },
+      });
+      Object.defineProperty(exports, "panBy", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.panBy;
+        },
+      });
+      Object.defineProperty(exports, "toCssTransform", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.toCssTransform;
+        },
+      });
+      Object.defineProperty(exports, "zoomAt", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.zoomAt;
+        },
+      });
+      Object.defineProperty(exports, "zoomBy", {
+        enumerable: true,
+        get: function () {
+          return viewport_js_1.zoomBy;
+        },
+      });
+    },
   });
 
   // src/webview/client/main.ts
@@ -651,14 +828,26 @@ ${body}
       return false;
     }
     const size2 = content2;
-    return typeof fields["svg"] === "string" && typeof fields["label"] === "string" && typeof size2["width"] === "number" && typeof size2["height"] === "number";
+    return (
+      typeof fields["svg"] === "string" &&
+      typeof fields["label"] === "string" &&
+      typeof size2["width"] === "number" &&
+      typeof size2["height"] === "number"
+    );
   }
   function isVersionedMessage(message) {
     return typeof message === "object" && message !== null && message.version === PROTOCOL_VERSION;
   }
 
   // src/webview/client/sanitise.ts
-  var FORBIDDEN_ELEMENTS = /* @__PURE__ */ new Set(["script", "foreignobject", "iframe", "object", "embed", "a"]);
+  var FORBIDDEN_ELEMENTS = /* @__PURE__ */ new Set([
+    "script",
+    "foreignobject",
+    "iframe",
+    "object",
+    "embed",
+    "a",
+  ]);
   var URL_ATTRIBUTES = /* @__PURE__ */ new Set(["href", "xlink:href", "src"]);
   function sanitiseSvg(root) {
     for (const child of Array.from(root.children)) {
@@ -680,7 +869,10 @@ ${body}
     }
   }
   function isSafeUrl(value) {
-    const url = value.replace(/[\u0000-\u0020]/g, "").trim().toLowerCase();
+    const url = value
+      .replace(/[\u0000-\u0020]/g, "")
+      .trim()
+      .toLowerCase();
     return url.startsWith("#") || url.startsWith("data:image/");
   }
 
@@ -692,7 +884,13 @@ ${body}
   var extent = document.getElementById("mso-extent");
   var status = document.getElementById("mso-status");
   var zoomReadout = document.getElementById("mso-zoom");
-  if (sheet === null || stage === null || extent === null || status === null || zoomReadout === null) {
+  if (
+    sheet === null ||
+    stage === null ||
+    extent === null ||
+    status === null ||
+    zoomReadout === null
+  ) {
     throw new Error("diagram shell is missing its canvas elements");
   }
   var content = { width: 0, height: 0 };
@@ -741,9 +939,7 @@ ${body}
     stage.replaceChildren(document.importNode(root, true));
     content = inkSize(pixelSize);
     sheet.setAttribute("aria-label", label);
-    for (const button of Array.from(
-      document.querySelectorAll("[data-view-tool]")
-    )) {
+    for (const button of Array.from(document.querySelectorAll("[data-view-tool]"))) {
       button.disabled = false;
     }
     fit(true);
@@ -806,8 +1002,11 @@ ${body}
         event.preventDefault();
         const factor = Math.pow(import_ui.ZOOM_STEP, -Math.sign(event.deltaY));
         setView(
-          (0, import_ui.zoomAt)(view, factor, { x: event.clientX - box.left, y: event.clientY - box.top }),
-          true
+          (0, import_ui.zoomAt)(view, factor, {
+            x: event.clientX - box.left,
+            y: event.clientY - box.top,
+          }),
+          true,
         );
         return;
       }
@@ -816,7 +1015,7 @@ ${body}
       const vertical = event.shiftKey ? 0 : event.deltaY;
       setView((0, import_ui.panBy)(view, -horizontal, -vertical), true);
     },
-    { passive: false }
+    { passive: false },
   );
   for (const button of Array.from(document.querySelectorAll("[data-view-tool]"))) {
     button.addEventListener("click", () => {

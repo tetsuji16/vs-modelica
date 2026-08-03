@@ -536,3 +536,90 @@ code faults:
   `java\u0000script:` hiding a scheme. Disabled for that line with the reason
   recorded. The disable comment must sit immediately above the regex line, not
   above the statement.
+
+---
+
+## 2026-08-03 (cont.) — Phase 3 slice 1: lossless CST and source patch engine
+
+Criteria were written before implementation
+(`docs/gate-reports/phase-3-slice-1-criteria.md`); gate report in
+`docs/gate-reports/phase-3-slice-1.md`.
+
+### Verified commands
+
+```text
+pnpm lint         -> clean
+pnpm check        -> 5 projects, 0 errors
+pnpm test         -> 34 files, 269 tests, all passing
+pnpm test:visual  -> 4 baseline(s) verified
+pnpm sample       -> SAMPLE OK
+pnpm sample:edit  -> edit minimal, inverse exact, edited model checks in OMC
+```
+
+### Delivered
+
+| Task                               | Status | Files                                              |
+| ---------------------------------- | ------ | -------------------------------------------------- |
+| Hostile editing fixture            | done   | `fixtures/editing/AwkwardlyFormatted.mo`           |
+| Error-tolerant CST scanner         | done   | `packages/modelica/src/edit/scanner.ts`            |
+| Lossless patch engine              | done   | `packages/modelica/src/edit/patch.ts`              |
+| `moveComponent` contract operation | done   | `packages/contracts/src/index.ts`                  |
+| Scanner tests (19)                 | done   | `packages/modelica/test/scanner.test.ts`           |
+| Patch tests (21)                   | done   | `packages/modelica/test/patch.test.ts`             |
+| 1000-operation property test (3)   | done   | `packages/modelica/test/patch.property.test.ts`    |
+| Real-compiler edit check           | done   | `tools/run-edit-check.mjs`, `pnpm sample:edit`, CI |
+
+### Why a scanner and not OMC's writers
+
+OMC remains the semantic authority, but it cannot serve editing: `getComponents`
+returns values without source positions, and OMC's own writers reformat the
+class — comments move, whitespace normalises, unknown annotations can be
+dropped. Scenario A requires that a ten-unit drag change only the Placement
+annotation. So the scanner supplies _ranges_ and OMC supplies _meaning_; the
+scanner never interprets Modelica semantics, which is what lets it be
+error-tolerant enough for half-typed documents.
+
+### Decisions
+
+- **`moveComponent` carries a delta, not a position.** An absolute position
+  forces reconstruction of the Placement, and reconstruction is exactly what
+  normalises spacing. A delta rewrites digits in place.
+- **Separators are lifted verbatim from the original extent**, not inferred, so
+  `{{-10,30},{10,50}}` stays unspaced and `{{-100, 30}, {-80, 50}}` stays spaced.
+  Inferring "spaced or not" would handle two styles and drift on the rest.
+- **A missing Placement is inserted, not written by replacing the annotation.**
+  This is where a naive engine drops a sibling `Documentation` or a vendor key;
+  the fixture has both and tests assert they survive.
+- **Batches are atomic, applied back to front**, so a length-changing edit
+  cannot invalidate a later range, and a failure writes nothing.
+- **Unimplemented operations throw** (`UnsupportedOperationError`) rather than
+  no-op. A drag that appears to work but changes nothing is worse than an error.
+
+### Bug the fixture caught
+
+`scanClass` measured the class body start by skipping trivia and then finding the
+next newline — but skipping trivia stepped over the header's newline, so **the
+first declaration of every class was invisible**. Five lexical tests failed on
+this alone. Fixed by measuring from immediately after the class name. This is
+the argument for a fixture built out of awkward formatting rather than a tidy
+example.
+
+### Known defect, deferred deliberately
+
+`pnpm sample:edit` failed once, transiently:
+`Could not read a version from ...omc.exe. Check execute permissions...`
+
+Cause: `createSpawnVersionProbe` has a fixed 10 s timeout and OMC's cold start
+exceeded it under concurrent build load. Two faults, neither in this slice:
+the timeout is not configurable, and **the message misreports the cause** — a
+timeout is presented as an unreadable version, sending the user to check
+permissions that are fine. Left for the Scenario D resilience work rather than
+widening this slice.
+
+### Not delivered (so the gate is not over-read)
+
+No UI: nothing in the webview can move a component yet, and the engine has no
+caller outside tests. No undo/redo wiring, no route editing, no add/remove
+component, no modifier editor, no conflict UX beyond the revision refusal.
+**Scenario A is not yet claimed end to end** — its engine half is proven, its UI
+half does not exist.
