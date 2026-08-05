@@ -52,7 +52,7 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/openmodelica.gpg] http://build.openmodelica.org/apt $(lsb_release -cs) release" \
             | sudo tee /etc/apt/sources.list.d/openmodelica.list
           sudo apt-get update
-          sudo apt-get install -y omc omlib-modelica-4.0.0
+          sudo apt-get install -y openmodelica
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Run the sample end to end
