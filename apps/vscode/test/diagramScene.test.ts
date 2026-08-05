@@ -165,12 +165,14 @@ describe("buildSceneMessage", () => {
         getNthConnectionAnnotationRaw: async () => "{}",
       },
       "Demo",
+      5,
     );
     expect(message.type).toBe("diagram/scene");
     if (message.type !== "diagram/scene") {
       return;
     }
     expect(message.version).toBe(1);
+    expect(message.payload.revision).toBe(5);
     expect(message.payload.svg).toContain("<svg");
     expect(message.payload.svg).toContain('data-instance="R1"');
     // The renderer's own pixel size, so the client fits pixels to pixels.

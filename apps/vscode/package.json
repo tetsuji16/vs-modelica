@@ -182,6 +182,77 @@
         "title": "Refresh Views",
         "category": "Modelica Studio",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "modelicaStudio.simulate",
+        "title": "Simulate",
+        "category": "Modelica Studio",
+        "icon": "$(play)"
+      },
+      {
+        "command": "modelicaStudio.clearResults",
+        "title": "Clear Simulation Results",
+        "category": "Modelica Studio",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "modelicaStudio.openResult",
+        "title": "Open Result File",
+        "category": "Modelica Studio",
+        "icon": "$(file)"
+      },
+      {
+        "command": "modelicaStudio.plot",
+        "title": "Plot Result",
+        "category": "Modelica Studio",
+        "icon": "$(chart)"
+      },
+      {
+        "command": "modelicaStudio.ai.propose",
+        "title": "AI: Propose Edit",
+        "category": "Modelica Studio",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "modelicaStudio.ai.clearCredentials",
+        "title": "AI: Clear Credentials",
+        "category": "Modelica Studio"
+      },
+      {
+        "command": "modelicaStudio.mcp.start",
+        "title": "MCP: Start stdio server",
+        "category": "Modelica Studio"
+      },
+      {
+        "command": "modelicaStudio.mcp.stop",
+        "title": "MCP: Stop stdio server",
+        "category": "Modelica Studio"
+      },
+      {
+        "command": "modelicaStudio.package.list",
+        "title": "Packages: List Libraries",
+        "category": "Modelica Studio"
+      },
+      {
+        "command": "modelicaStudio.animate",
+        "title": "Open Animation",
+        "category": "Modelica Studio",
+        "icon": "$(device-camera)"
+      },
+      {
+        "command": "modelicaStudio.debug.start",
+        "title": "Debug: Start GDB Session",
+        "category": "Modelica Studio"
+      },
+      {
+        "command": "modelicaStudio.debug.step",
+        "title": "Debug: Step",
+        "category": "Modelica Studio"
+      },
+      {
+        "command": "modelicaStudio.debug.continue",
+        "title": "Debug: Continue",
+        "category": "Modelica Studio"
       }
     ],
     "menus": {
@@ -222,6 +293,16 @@
           "command": "modelicaStudio.refreshViews",
           "when": "view == modelicaStudio.models || view == modelicaStudio.elements",
           "group": "navigation@1"
+        },
+        {
+          "command": "modelicaStudio.clearResults",
+          "when": "view == modelicaStudio.results",
+          "group": "navigation@0"
+        },
+        {
+          "command": "modelicaStudio.simulate",
+          "when": "view == modelicaStudio.results",
+          "group": "navigation@1"
         }
       ],
       "commandPalette": [
@@ -231,6 +312,10 @@
         },
         {
           "command": "modelicaStudio.checkModel",
+          "when": "resourceLangId == modelica"
+        },
+        {
+          "command": "modelicaStudio.simulate",
           "when": "resourceLangId == modelica"
         },
         {
@@ -257,6 +342,34 @@
         }
       ]
     },
+    "breakpoints": [
+      {
+        "language": "modelica"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "modelica-gdb",
+        "label": "Modelica GDB (generated simulation)",
+        "languages": [
+          "modelica"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to the compiled simulation executable."
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          }
+        }
+      }
+    ],
     "configuration": {
       "title": "Modelica Studio OSS",
       "properties": {
@@ -316,7 +429,10 @@
     "@modelica-studio/contracts": "workspace:*",
     "@modelica-studio/modelica": "workspace:*",
     "@modelica-studio/omc": "workspace:*",
-    "@modelica-studio/ui": "workspace:*"
+    "@modelica-studio/ui": "workspace:*",
+    "@modelica-studio/ai": "workspace:*",
+    "@modelica-studio/mcp": "workspace:*",
+    "@modelica-studio/animation": "workspace:*"
   },
   "devDependencies": {
     "@types/vscode": "^1.125.0",

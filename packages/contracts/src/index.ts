@@ -89,11 +89,22 @@ export type HostToWebviewMessage =
 
 export type WebviewToHostMessage =
   | {
+      /**
+       * A direct, local source edit requested from the diagram canvas.
+       *
+       * Carries the document revision the webview built its scene from, so a
+       * move made against a stale snapshot is refused before any byte is
+       * touched. The webview only ever sends typed deltas (`moveComponent` with
+       * `dx`/`dy`), never source text or absolute positions — the host owns
+       * validation and the patch engine owns the bytes.
+       */
       readonly version: typeof CONTRACT_VERSION;
-      readonly type: "document/apply";
+      readonly type: "document/edit";
       readonly revision: DocumentRevision;
       readonly payload: readonly DomainOperation[];
     }
+  | { readonly version: typeof CONTRACT_VERSION; readonly type: "document/undo" }
+  | { readonly version: typeof CONTRACT_VERSION; readonly type: "document/redo" }
   | {
       readonly version: typeof CONTRACT_VERSION;
       readonly type: "proposal/accept";

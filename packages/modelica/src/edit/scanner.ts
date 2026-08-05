@@ -287,6 +287,127 @@ export function scanComponents(source: string): ComponentSpan[] {
 }
 
 /**
+ * Finds every top-level `connect(a.b, c.d)` statement in the class body.
+ *
+ * Connections are a distinct syntactic category from declarations, so they are
+ * scanned separately; the editor reuses OMC to decide whether a wire is valid,
+ * but needs byte ranges to insert, delete, or reroute it without disturbing
+ * neighbours.
+ */
+export function scanConnections(source: string): ConnectionSpan[] {
+  const classSpan = scanClass(source);
+  const cursor = new Cursor(source, classSpan?.bodyStart ?? 0);
+  const found: ConnectionSpan[] = [];
+
+  while (!cursor.done) {
+    cursor.skipTrivia();
+    if (cursor.done) {
+      break;
+    }
+    const start = cursor.at;
+    const word = cursor.match(IDENTIFIER);
+    if (word !== "connect") {
+      // Section keywords (equation/algorithm/initial/public/protected) open a
+      // block that contains connect() statements, so we must not skip the whole
+      // statement — only the keyword itself, then keep scanning inside.
+      if (
+        word === "equation" ||
+        word === "algorithm" ||
+        word === "initial" ||
+        word === "public" ||
+        word === "protected"
+      ) {
+        continue;
+      }
+      // Skip the whole statement so a `connect` token inside an argument is not
+      // mistaken for a connection.
+      if (word === undefined) {
+        cursor.step();
+      } else {
+        skipStatement(cursor);
+      }
+      continue;
+    }
+    cursor.skipTrivia();
+    if (source[cursor.at] !== "(") {
+      skipStatement(cursor);
+      continue;
+    }
+    const end = skipBalanced(cursor);
+    const args = source.slice(start, end);
+    const inside = args.slice(args.indexOf("(") + 1, args.lastIndexOf(")"));
+    const parts = splitTopLevel(inside, ",");
+    if (parts.length === 2) {
+      // Include the trailing `;` (or the rest of the line, for files written
+      // without one) so removal takes the whole statement. A `}` inside an
+      // annotation argument must NOT stop the scan — only the statement's own
+      // `;` or line break ends it.
+      let stmtEnd = end;
+      while (stmtEnd < source.length && source[stmtEnd] !== ";" && source[stmtEnd] !== "\n") {
+        stmtEnd += 1;
+      }
+      if (stmtEnd < source.length && source[stmtEnd] !== "\n") {
+        stmtEnd += 1; // consume the `;`
+      }
+      found.push({
+        range: { start, end: stmtEnd },
+        from: parts[0]!.trim(),
+        to: parts[1]!.trim(),
+      });
+    }
+    cursor.at = end;
+  }
+
+  return found;
+}
+
+/** Splits `text` on a separator that is not nested in brackets/quotes. */
+function splitTopLevel(text: string, separator: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]!;
+    if (char === '"') {
+      // Skip string content so commas inside it are not separators.
+      current += char;
+      index += 1;
+      while (index < text.length) {
+        const inner = text[index]!;
+        current += inner;
+        if (inner === "\\") {
+          index += 1;
+          if (index < text.length) current += text[index]!;
+        } else if (inner === '"') {
+          break;
+        }
+        index += 1;
+      }
+      continue;
+    }
+    if ("([{".includes(char)) depth += 1;
+    else if (")]}".includes(char)) depth = Math.max(0, depth - 1);
+    if (char === separator && depth === 0) {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  parts.push(current);
+  return parts;
+}
+
+export interface ConnectionSpan {
+  /** The whole `connect(...) `statement, including trailing `;`. */
+  readonly range: SourceRange;
+  /** The `from` argument, trimmed. */
+  readonly from: string;
+  /** The `to` argument, trimmed. */
+  readonly to: string;
+}
+
+/**
  * Advances to just past the `;` that ends the current statement, tracking
  * bracket depth so a `;` inside `(...)` or `{...}` does not end it early.
  */

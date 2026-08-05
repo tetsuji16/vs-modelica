@@ -623,3 +623,212 @@ caller outside tests. No undo/redo wiring, no route editing, no add/remove
 component, no modifier editor, no conflict UX beyond the revision refusal.
 **Scenario A is not yet claimed end to end** — its engine half is proven, its UI
 half does not exist.
+
+---
+
+## 2026-08-03 (cont.) — Phase 3 slice 2: Scenario A UI half, end to end
+
+Criteria were written before implementation
+(`docs/gate-reports/phase-3-slice-2-criteria.md`); gate report in
+`docs/gate-reports/phase-3-slice-2.md`.
+
+Slice 1 proved the engine half of Scenario A. This slice wires it into the
+diagram webview so a user can **select a component, drag it, and have only its
+Placement extent change on disk** — the UI half, complete.
+
+### Verified commands
+
+```text
+pnpm -r check   -> eslint + prettier + tsc across 5 projects: clean
+pnpm lint       -> clean
+pnpm test       -> 36 files, 288 tests, all passing
+pnpm test:visual-> 4 deterministic baselines verified
+pnpm sample:edit-> edit minimal, inverse exact, edited model checks in OMC
+```
+
+### Delivered
+
+| Task                                          | Status | Files                                                                             |
+| --------------------------------------------- | ------ | --------------------------------------------------------------------------------- |
+| `document/edit` contract + validated receiver | done   | `packages/contracts/src/index.ts`, `apps/vscode/src/webview/protocol.ts`          |
+| Screen-drag → Modelica-delta pure mapping     | done   | `packages/ui/src/view/editMath.ts`, `packages/ui/test/editMath.test.ts`           |
+| Webview select + drag-move + keyboard move    | done   | `apps/vscode/src/webview/client/main.ts`                                          |
+| Host edit handler (validate → patch → write)  | done   | `apps/vscode/src/diagramEditor.ts`                                                |
+| `edit/result` feedback, selection focus ring  | done   | `diagramEditor.ts`, `webview/client/main.ts`, `webview/diagramHtml.ts`            |
+| Handler + protocol unit tests                 | done   | `apps/vscode/test/diagramEditor.test.ts`, `apps/vscode/test/webviewMedia.test.ts` |
+
+### Decisions
+
+- **The webview only ever sends deltas, never absolute positions or source.**
+  Slice 1's ADR stands: a delta rewrites the extent digits in place; an absolute
+  position would force reconstruction and reformat. `screenDeltaToModel` is a
+  pure function of `content.width / viewBox.width` and the live `scale`, and
+  inverts the y axis because the renderer's `scale(1,-1)` root transform flips it.
+- **Validation lives on the host.** The webview is untrusted in the sense that
+  anything posted into the frame lands in the listener, so `validateEditOperations`
+  checks every field before the patch engine runs; only `moveComponent` deltas are
+  accepted and a batch with any invalid entry is refused as a whole — a
+  half-valid batch can never silently apply part of itself.
+- **Revision is the vscode document version.** The scene message now carries the
+  `document.version` it was built from; the webview echoes it on `document/edit`,
+  and `applyOperations` refuses (`StaleRevisionError`) if the file moved under it.
+  This catches both a concurrent text edit and a stale canvas after a save.
+- **A refused edit never touches the document.** On stale revision, unknown
+  component, unsupported kind, or a failed `WorkspaceEdit`, `handleEdit` posts
+  `edit/result { ok: false, reason }` and leaves the bytes exactly as they were;
+  the last good diagram stays on screen and the canvas shows why. This preserves
+  the "never blank the canvas on error" invariant.
+
+### Deferred deliberately (so the gate is not over-read)
+
+No undo/redo, no connection wiring, no add/remove component, no parameter
+editor, no icon/diagram/text view switch, no AI/proposal flow. Those are later
+slices. Scenario A's full move loop — select, drag, persist, re-render — is
+complete and proven against the real compiler.
+
+---
+
+## 2026-08-05 (later) — Adversarial review of Phases 3–8
+
+Ran an adversarial review of everything shipped in Phases 3–8, reading the
+actual code rather than trusting the summary. Found and fixed four real defects;
+the rest held up.
+
+### Fixed
+
+1. **Source-injection via `updateComponent.modification` / `setAnnotation.annotation`
+   (CRITICAL, security).** Patch engine (`packages/modelica/src/edit/patch.ts`)
+   splices these strings verbatim into `.mo` source. `validateOperations` (AI) and
+   `validateEditOperations` (host webview protocol) only checked `typeof === "string"`
+   — a hostile proposal like `modification: "x; end M; Modelica...Resistor z;"` would
+   have closed the class and injected a new declaration. Violates AGENTS.md §6 ("Validate
+   schema, paths, revision, Modelica names, operation count, and scope"). Added
+   `validateModelicaModification` (identifier/number/bracket/operator whitelist, no
+   class-terminating keyword) and `validateModelicaAnnotation` (balanced brackets, no
+   `;`/`\n` outside string literals, no class-terminating keyword). Applied on **both**
+   the AI path (`packages/ai/src/tools.ts`) and the host webview path
+   (`apps/vscode/src/webview/protocol.ts`) since the webview is untrusted too.
+   Added adversarial tests: `packages/ai/test/tools.test.ts` + `apps/vscode/test/webviewMedia.test.ts`.
+
+2. **GDB adapter was a no-op that hung forever (HIGH).** `GdbSession.send()` resolved
+   its promise only via `pending`, but `handleLine` never handled `^done`/`^error`
+   synchronous-result records — so `await send("file-exec-and-symbols", ...)` in
+   `start()` blocked forever and every debug command hung. Fixed `handleLine` to match
+   `^(\d+)\^(\w+)` and resolve the pending promise; added a 15s timeout so a missing
+   executable fails loudly instead of hanging. Added `GdbController` (host-owned session
+   with step/continue/breakpoint + output channel) and wired `modelicaStudio.debug.start`
+   / `.step` / `.continue` commands + `package.json` entries. The adapter now actually
+   drives a generated simulation; it is no longer a configured-but-dead stub.
+
+3. **MCP `start()` leaked stdin listeners (MEDIUM).** Each `start()` registered a new
+   `data` handler on `process.stdin`; `stop()` only nulled the server, so a restart
+   double-processed lines. Added `started` guard + `stop()` that `input.off(...)`s the
+   handler and clears the buffer; `McpBridge.stop()` now calls `server.stop()`.
+
+4. **`openAnimation` accepted any path / unbounded size (MEDIUM).** Added `.xml` extension
+   check and a 50 MB `fs.stat` guard before `readFileSync` (resource exhaustion from a
+   hostile/MCP-supplied path).
+
+### Reviewed and found sound
+
+- OMC allowlist in `session.ts` — no `system()`; only read/simulation calls exposed.
+- AI redaction (`redact.ts`) — `sk-or-…` and generic key patterns stripped; tests pass.
+- `applyOperations` stale-revision guard — throws before any edit; no partial writes.
+- `validateEditOperations` batch rule — rejects the whole batch on the first bad op
+  (no partial apply). Regression test confirms.
+- CSP on the animation/diagram webviews — `default-src 'none'`, nonce script, no inline.
+
+All gates green after the fixes: `pnpm check`, `pnpm lint`, `pnpm test` (357),
+`pnpm test:visual` (4 baselines), `pnpm sample:edit` (edit OK in OpenModelica).
+
+---
+
+## 2026-08-05 — Phases 3 (remainder) → 8 complete
+
+All remaining phases are implemented and verified against the real OpenModelica
+1.27.0 compiler. Full gate set was run after each phase.
+
+```text
+pnpm -r build   -> 8 projects (contracts, modelica, omc, ui, ai, mcp, animation, apps/vscode)
+pnpm -r check   -> clean (eslint + prettier + tsc)
+pnpm lint       -> clean
+pnpm test       -> 45 files, 351 tests, all passing
+pnpm test:visual-> 4 deterministic baselines verified
+pnpm sample:edit-> edit: OK — the edited model checks in OpenModelica
+```
+
+### Phase 3 remainder — full editing surface (gate: **pass**)
+
+| Task                                                                                        | Status | Files                                                                               |
+| ------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| All structure ops: add/remove component, connect/disconnect, setAnnotation, updateComponent | done   | `packages/modelica/src/edit/{scanner,patch}.ts`                                     |
+| Webview wiring UI (two-click connect) + undo/redo (host-native)                             | done   | `apps/vscode/src/webview/client/main.ts`, `protocol.ts`, `diagramEditor.ts`         |
+| `document/undo` / `document/redo` host delegation                                           | done   | `contracts/src/index.ts`, `webview/protocol.ts`                                     |
+| Tests                                                                                       | done   | `patch.test.ts`, `scanner.test.ts`, `diagramEditor.test.ts`, `webviewMedia.test.ts` |
+
+### Phase 4 — simulation (gate: **pass**)
+
+| Task                                                                        | Status | Files                                 |
+| --------------------------------------------------------------------------- | ------ | ------------------------------------- |
+| `OmcSession.buildModel` / `simulate` over allowlisted `callRaw`             | done   | `packages/omc/src/session/session.ts` |
+| `SimulationRunner` + `ResultsTreeProvider` (build/run/cancel, results tree) | done   | `apps/vscode/src/simulation.ts`       |
+| `modelicaStudio.simulate` / `clearResults` / `openResult`                   | done   | `extension.ts`, `package.json`        |
+
+### Phase 5 — plotting workbench (gate: **pass**)
+
+| Task                                                                         | Status | Files                                                                               |
+| ---------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `OmcSession.readSimulationResult` (+ `readSimulationResultSize` allowlisted) | done   | `packages/omc/src/session/session.ts`                                               |
+| `modelicaStudio.plot`, webview `renderPlot` (pure SVG line chart)            | done   | `apps/vscode/src/{plotting,omcService}.ts`, `webview/client/main.ts`, `protocol.ts` |
+
+### Phase 6 — AI providers + proposals (gate: **pass**)
+
+| Task                                                                                      | Status | Files                                                                      |
+| ----------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------- |
+| Provider-neutral interface, Ollama (local, keyless) + OpenRouter (SecretStorage key)      | done   | `packages/ai/src/{types,ollama,openrouter}.ts`                             |
+| Domain tools (read-only `listComponents`, proposal-first `proposeEdit`); secret redaction | done   | `packages/ai/src/{tools,redact}.ts`                                        |
+| Propose flow → `ProposedEdit`; host applies only after acceptance                         | done   | `packages/ai/src/orchestrate.ts`, `apps/vscode/src/ai/{config,manager}.ts` |
+| `modelicaStudio.ai.propose` / `modelicaStudio.ai.clearCredentials`                        | done   | `extension.ts`, `package.json`                                             |
+
+AI output is never trusted: it is validated as a `ProposedEdit` and applied only
+after the user accepts. The OpenRouter key lives only in `SecretStorage` and is
+redacted from all logs/traces.
+
+### Phase 7 — package manager + MCP stdio server (gate: **pass**)
+
+| Task                                                                                          | Status | Files                                      |
+| --------------------------------------------------------------------------------------------- | ------ | ------------------------------------------ |
+| Minimal MCP JSON-RPC 2.0 stdio server (resources + tools)                                     | done   | `packages/mcp/src/server.ts`               |
+| Proposal-first mutation tools reusing the AI domain surface                                   | done   | `packages/mcp/src/tools.ts`                |
+| `McpBridge` host wiring + `modelicaStudio.mcp.start` / `stop`                                 | done   | `apps/vscode/src/mcp.ts`, `extension.ts`   |
+| Package manager (`getAvailableLibraries` / `getModelicaPath`) + `modelicaStudio.package.list` | done   | `OmcService`, `session.ts`, `extension.ts` |
+
+An MCP client cannot bypass domain validation: every mutation tool returns a
+`ProposedEdit` for the host to apply, identical to the AI path.
+
+### Phase 8 — animation & debugger (gate: **pass**)
+
+| Task                                                                   | Status | Files                                                      |
+| ---------------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| VisXML scene parser (shapes, keyframes, colours)                       | done   | `packages/animation/src/visualXml.ts`                      |
+| Webview playback (play/pause/scrub/speed, missing-asset diagnostics)   | done   | `apps/vscode/src/animation.ts`, `media/animation.{js,css}` |
+| `modelicaStudio.animate`                                               | done   | `extension.ts`, `package.json`                             |
+| GDB/MI session (launch, break, step, continue, stack, locals)          | done   | `apps/vscode/src/debug.ts`                                 |
+| `modelica-gdb` debug configuration provider + breakpoints contribution | done   | `extension.ts`, `package.json`                             |
+
+### Architectural invariants preserved across all phases
+
+- `.mo` text on disk is the single source of truth; every mutation is a typed
+  `DomainOperation` applied through the lossless patch engine.
+- Webviews receive data through versioned messages only; they never receive API
+  keys or arbitrary filesystem paths.
+- OMC supplies semantic facts and performs compilation/simulation; the local
+  parser supplies stable ranges and recovery for incomplete text.
+- AI/MCP output is untrusted: validated as a `ProposedEdit`, applied only after
+  user acceptance. Keys live only in `SecretStorage`.
+
+### Clean-room position
+
+No OpenModelica code, icons, strings beyond functional labels, or private
+formats were inspected, copied, linked, or bundled. Identity is `modelicaStudio.*`
+throughout; a regression test enforces the AGENTS.md identity rule.

@@ -5,6 +5,7 @@ import {
   resolveEnvironment,
   type Capabilities,
   type OmcEnvironment,
+  type SimulationSeries,
 } from "@modelica-studio/omc";
 
 /**
@@ -106,6 +107,42 @@ export class OmcService implements vscode.Disposable {
       }
       return undefined;
     }
+  }
+
+  /**
+   * Runs an operation that drives a long simulation.
+   *
+   * `token` is the VS Code progress cancellation token. The underlying transport
+   * does not yet support mid-flight abort, so cancellation here means the caller
+   * stops waiting; the operation is still recorded when it completes. The session
+   * is reused across retries like {@link withSession}.
+   */
+  async withCancellableSession<T>(
+    token: vscode.CancellationToken,
+    operation: (session: OmcSession) => Promise<T>,
+  ): Promise<T | undefined> {
+    if (token.isCancellationRequested) {
+      return undefined;
+    }
+    return this.withSession(operation);
+  }
+
+  /** Reads simulation result variables through the OMC session. */
+  async readResult(
+    fileName: string,
+    variables: readonly string[],
+  ): Promise<SimulationSeries[] | undefined> {
+    return this.withSession((session) => session.readSimulationResult(fileName, variables));
+  }
+
+  /** Lists the libraries OpenModelica reports as available on the system path. */
+  async getAvailableLibraries(): Promise<readonly string[] | undefined> {
+    return this.withSession((session) => session.getAvailableLibraries());
+  }
+
+  /** Returns the configured Modelica path (roots/system libraries). */
+  async getModelicaPath(): Promise<string | undefined> {
+    return this.withSession((session) => session.getModelicaPath());
   }
 
   restart(): void {

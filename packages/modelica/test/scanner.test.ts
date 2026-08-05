@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { describe, expect, it } from "vitest";
-import { scanClass, scanComponents, type ComponentSpan } from "../src/edit/scanner.js";
+import {
+  scanClass,
+  scanComponents,
+  scanConnections,
+  type ComponentSpan,
+} from "../src/edit/scanner.js";
 
 const FIXTURE = readFileSync(
   path.resolve(__dirname, "..", "..", "..", "fixtures", "editing", "AwkwardlyFormatted.mo"),
@@ -167,5 +172,29 @@ describe("scanClass", () => {
 
   it("ignores a class keyword inside a comment", () => {
     expect(scanClass("// model NotReal\nmodel Real2\nend Real2;\n")?.name).toBe("Real2");
+  });
+});
+
+describe("scanConnections", () => {
+  it("finds every connect statement's endpoints", () => {
+    const source = `model M
+  Modelica.Blocks.Sources.Step step;
+  Modelica.Blocks.Continuous.FirstOrder lag;
+equation
+  connect(step.y, lag.u);
+  connect(lag.y, out.u);
+end M;`;
+    const connections = scanConnections(source);
+    expect(connections.map((c) => `${c.from} -> ${c.to}`)).toEqual([
+      "step.y -> lag.u",
+      "lag.y -> out.u",
+    ]);
+  });
+
+  it("ignores a connect token used as an argument", () => {
+    const source = `model M
+  foo(connector = step.y);
+end M;`;
+    expect(scanConnections(source)).toHaveLength(0);
   });
 });

@@ -97,15 +97,23 @@ export async function pickDisplayClass(
 export async function buildSceneMessage(
   source: AnnotationSource,
   className: string,
+  revision: number,
 ): Promise<DiagramMessage> {
   const scene = await buildDiagramScene(source, className);
-  const { svg, width, height } = renderSceneGraph(scene);
+  const { svg, width, height, viewBox } = renderSceneGraph(scene);
   return {
     version: 1,
     type: "diagram/scene",
     payload: {
+      revision,
       svg,
       content: { width, height },
+      viewBox: {
+        x: viewBox.min.x,
+        y: viewBox.min.y,
+        width: viewBox.max.x - viewBox.min.x,
+        height: viewBox.max.y - viewBox.min.y,
+      },
       label: `Diagram of ${className}`,
       status: describeScene(className, scene),
     },

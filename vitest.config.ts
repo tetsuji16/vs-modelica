@@ -10,10 +10,15 @@ export default defineConfig({
       "@modelica-studio/contracts": pkg("contracts"),
       "@modelica-studio/omc": pkg("omc"),
       "@modelica-studio/ui": pkg("ui"),
+      "@modelica-studio/ai": pkg("ai"),
+      "@modelica-studio/modelica": pkg("modelica"),
+      "@modelica-studio/mcp": pkg("mcp"),
+      "@modelica-studio/animation": pkg("animation"),
     },
   },
   test: {
     include: ["packages/*/test/**/*.test.ts", "apps/*/test/**/*.test.ts"],
     environment: "node",
+    environmentMatchGlobs: [{ pattern: "packages/animation/**", environment: "jsdom" }],
   },
 });

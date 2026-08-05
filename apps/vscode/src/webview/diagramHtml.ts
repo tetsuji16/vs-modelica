@@ -58,6 +58,7 @@ export function buildDiagramHtml(options: DiagramHtmlOptions): string {
         <button type="button" class="mso-tool" data-view-tool="zoom-in" title="Zoom in" aria-label="Zoom in" disabled>+</button>
         <button type="button" class="mso-tool" data-view-tool="zoom-out" title="Zoom out" aria-label="Zoom out" disabled>&#8722;</button>
         <button type="button" class="mso-tool" data-view-tool="reset" title="Reset view" aria-label="Reset view" disabled>&#8634;</button>
+        <button type="button" class="mso-tool" data-view-tool="wire" title="Connect two components" aria-label="Connect two components">&#8644;</button>
       </nav>
       <section class="mso-sheet-area">
         <div class="mso-mode-controls" role="group" aria-label="View mode">
@@ -299,6 +300,23 @@ body.mso-body {
 .mso-stage svg {
   display: block;
   overflow: visible;
+}
+
+/*
+ * A selected component gets a visible focus ring so keyboard and pointer paths
+ * are equally discoverable. The ring is drawn as an outline on the group so it
+ * does not disturb the model's own strokes, and it is skipped in forced-colours
+ * mode where the OS provides its own focus indicator.
+ */
+.mso-component.is-selected {
+  outline: 2px solid var(--mso-focus);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .mso-component.is-selected {
+    outline: none;
+  }
 }
 
 .mso-zoom {

@@ -3,7 +3,16 @@ import * as path from "node:path";
 import { describe, expect, it } from "vitest";
 import { LAYOUT } from "@modelica-studio/ui";
 import { buildDiagramHtml, diagramStylesheet } from "../src/webview/diagramHtml.js";
-import { isDiagramMessage, isWebviewReady } from "../src/webview/protocol.js";
+import {
+  isDiagramMessage,
+  isEditResultMessage,
+  isDocumentEdit,
+  isDocumentUndo,
+  isDocumentRedo,
+  isPlotDataMessage,
+  isWebviewReady,
+  validateEditOperations,
+} from "../src/webview/protocol.js";
 
 const mediaDir = path.resolve(__dirname, "..", "media");
 
@@ -107,6 +116,7 @@ describe("visual spec conformance", () => {
       "zoom-in",
       "zoom-out",
       "reset",
+      "wire",
     ]);
   });
 
@@ -137,8 +147,10 @@ describe("isDiagramMessage", () => {
     version: 1,
     type: "diagram/scene",
     payload: {
+      revision: 3,
       svg: "<svg/>",
       content: { width: 10, height: 10 },
+      viewBox: { x: -100, y: -100, width: 200, height: 200 },
       label: "Diagram of M",
       status: "M: 0 components, 0 connections.",
     },
@@ -164,6 +176,9 @@ describe("isDiagramMessage", () => {
       { ...scene, payload: { ...scene.payload, svg: 123 } },
       { ...scene, payload: { ...scene.payload, content: null } },
       { ...scene, payload: { ...scene.payload, content: { width: "10", height: 10 } } },
+      { ...scene, payload: { ...scene.payload, revision: "3" } },
+      { ...scene, payload: { ...scene.payload, viewBox: null } },
+      { ...scene, payload: { ...scene.payload, viewBox: { x: 0, y: 0, width: "10", height: 10 } } },
     ]) {
       expect(isDiagramMessage(value), JSON.stringify(value ?? null)).toBe(false);
     }
@@ -176,11 +191,180 @@ describe("isDiagramMessage", () => {
   });
 });
 
+describe("isEditResultMessage", () => {
+  it("accepts the host's edit outcome and rejects anything else", () => {
+    expect(
+      isEditResultMessage({
+        version: 1,
+        type: "edit/result",
+        payload: { ok: true, revision: 4, status: "moved" },
+      }),
+    ).toBe(true);
+    expect(
+      isEditResultMessage({
+        version: 1,
+        type: "edit/result",
+        payload: { ok: false, reason: "stale", revision: 3 },
+      }),
+    ).toBe(true);
+    expect(
+      isEditResultMessage({
+        version: 2,
+        type: "edit/result",
+        payload: { ok: true, revision: 4, status: "m" },
+      }),
+    ).toBe(false);
+    expect(isEditResultMessage({ version: 1, type: "diagram/scene", payload: {} })).toBe(false);
+    expect(isEditResultMessage(null)).toBe(false);
+  });
+});
+
+describe("isDocumentEdit", () => {
+  it("recognises a versioned edit request with a revision and operation array", () => {
+    expect(
+      isDocumentEdit({
+        version: 1,
+        type: "document/edit",
+        revision: 3,
+        payload: [{ kind: "moveComponent", instanceName: "R1", dx: 1, dy: 2 }],
+      }),
+    ).toBe(true);
+  });
+  it("rejects shape violations so a malformed frame never reaches the engine", () => {
+    expect(isDocumentEdit({ version: 1, type: "document/edit", revision: "3", payload: [] })).toBe(
+      false,
+    );
+    expect(isDocumentEdit({ version: 1, type: "document/edit", revision: 3, payload: "[]" })).toBe(
+      false,
+    );
+    expect(isDocumentEdit({ version: 1, type: "diagram/scene", payload: {} })).toBe(false);
+    expect(isDocumentEdit(null)).toBe(false);
+  });
+});
+
+describe("validateEditOperations", () => {
+  it("passes a well-formed moveComponent delta", () => {
+    const result = validateEditOperations([
+      { kind: "moveComponent", instanceName: "R1", dx: 1, dy: -2 },
+    ]);
+    expect(result).toEqual({
+      ok: true,
+      operations: [{ kind: "moveComponent", instanceName: "R1", dx: 1, dy: -2 }],
+    });
+  });
+
+  it("refuses an operation missing required fields", () => {
+    expect(validateEditOperations([{ kind: "connect", to: "b" } as never])).toEqual({
+      ok: false,
+      reason: "connect is missing from",
+    });
+  });
+
+  it("accepts a connect operation", () => {
+    expect(validateEditOperations([{ kind: "connect", from: "a.y", to: "b.u" }])).toEqual({
+      ok: true,
+      operations: [{ kind: "connect", from: "a.y", to: "b.u" }],
+    });
+  });
+
+  it("accepts an addComponent operation", () => {
+    expect(
+      validateEditOperations([{ kind: "addComponent", className: "X.Y", instanceName: "z" }]),
+    ).toEqual({
+      ok: true,
+      operations: [{ kind: "addComponent", className: "X.Y", instanceName: "z" }],
+    });
+  });
+
+  it("refuses a move with a missing or non-finite delta", () => {
+    expect(validateEditOperations([{ kind: "moveComponent", instanceName: "R1" }])).toEqual({
+      ok: false,
+      reason: "moveComponent has a non-finite delta",
+    });
+    expect(
+      validateEditOperations([{ kind: "moveComponent", instanceName: "R1", dx: NaN, dy: 0 }]),
+    ).toEqual({
+      ok: false,
+      reason: "moveComponent has a non-finite delta",
+    });
+  });
+
+  it("rejects a batch the moment any entry is invalid, not just the first", () => {
+    const batch = [
+      { kind: "moveComponent", instanceName: "R1", dx: 1, dy: 1 },
+      { kind: "moveComponent", instanceName: "R2" },
+    ];
+    expect(validateEditOperations(batch)).toEqual({
+      ok: false,
+      reason: "moveComponent has a non-finite delta",
+    });
+  });
+
+  it("refuses an empty edit", () => {
+    expect(validateEditOperations([])).toEqual({ ok: false, reason: "no operations in the edit" });
+  });
+
+  it("rejects a modification that would inject source (security)", () => {
+    const malicious = "x; end M; Modelica.Electrical.Analog.Basic.Resistor z;";
+    expect(
+      validateEditOperations([
+        { kind: "updateComponent", instanceName: "gain1", modification: malicious },
+      ]),
+    ).toEqual({ ok: false, reason: expect.stringContaining("disallowed character") });
+  });
+
+  it("rejects an annotation with a class terminator or unbalanced brackets", () => {
+    expect(
+      validateEditOperations([
+        { kind: "setAnnotation", target: "gain1", annotation: "Placement(...) end M" },
+      ]),
+    ).toEqual({ ok: false, reason: expect.stringContaining("class-terminating keyword") });
+    expect(
+      validateEditOperations([
+        { kind: "setAnnotation", target: "gain1", annotation: "Placement(" },
+      ]),
+    ).toEqual({ ok: false, reason: expect.stringContaining("unbalanced brackets") });
+  });
+});
+
 describe("isWebviewReady", () => {
   it("requires the contract version, not just the type", () => {
     expect(isWebviewReady({ version: 1, type: "webview/ready" })).toBe(true);
     expect(isWebviewReady({ type: "webview/ready" })).toBe(false);
     expect(isWebviewReady({ version: 99, type: "webview/ready" })).toBe(false);
     expect(isWebviewReady(null)).toBe(false);
+  });
+});
+
+describe("isDocumentUndo / isDocumentRedo", () => {
+  it("accepts the versioned undo/redo messages and rejects anything else", () => {
+    expect(isDocumentUndo({ version: 1, type: "document/undo" })).toBe(true);
+    expect(isDocumentRedo({ version: 1, type: "document/redo" })).toBe(true);
+    expect(isDocumentUndo({ version: 1, type: "document/redo" })).toBe(false);
+    expect(isDocumentRedo({ type: "document/redo" })).toBe(false);
+    expect(isDocumentUndo(null)).toBe(false);
+  });
+});
+
+describe("isPlotDataMessage", () => {
+  it("accepts a well-formed plot payload and rejects malformed ones", () => {
+    const ok = {
+      version: 1,
+      type: "plot/data",
+      payload: { file: "Model_res.mat", series: [{ name: "time", values: [0, 1] }] },
+    };
+    expect(isPlotDataMessage(ok)).toBe(true);
+    expect(isPlotDataMessage({ ...ok, version: 99 })).toBe(false);
+    expect(isPlotDataMessage({ version: 1, type: "diagram/scene", payload: {} })).toBe(false);
+    expect(
+      isPlotDataMessage({ version: 1, type: "plot/data", payload: { file: "x", series: "no" } }),
+    ).toBe(false);
+    expect(
+      isPlotDataMessage({
+        version: 1,
+        type: "plot/data",
+        payload: { file: "x", series: [{ name: 5, values: [] }] },
+      }),
+    ).toBe(false);
   });
 });

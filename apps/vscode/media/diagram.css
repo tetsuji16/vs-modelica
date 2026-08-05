@@ -236,6 +236,23 @@ body.mso-body {
   overflow: visible;
 }
 
+/*
+ * A selected component gets a visible focus ring so keyboard and pointer paths
+ * are equally discoverable. The ring is drawn as an outline on the group so it
+ * does not disturb the model's own strokes, and it is skipped in forced-colours
+ * mode where the OS provides its own focus indicator.
+ */
+.mso-component.is-selected {
+  outline: 2px solid var(--mso-focus);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .mso-component.is-selected {
+    outline: none;
+  }
+}
+
 .mso-zoom {
   margin-left: auto;
   font-variant-numeric: tabular-nums;

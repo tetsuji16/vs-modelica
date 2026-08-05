@@ -1,11 +1,20 @@
 import * as vscode from "vscode";
 import { redactPaths } from "./redact.js";
-import { CONTRACT_VERSION } from "@modelica-studio/contracts";
+import { CONTRACT_VERSION, type DomainOperation } from "@modelica-studio/contracts";
 import { annotationSource } from "./annotationSource.js";
 import { buildSceneMessage, findClassesInFile, pickDisplayClass } from "./diagramScene.js";
 import type { OmcService } from "./omcService.js";
 import { buildDiagramHtml, diagramStylesheet } from "./webview/diagramHtml.js";
-import { isWebviewReady, type DiagramMessage } from "./webview/protocol.js";
+import {
+  isDocumentEdit,
+  isDocumentRedo,
+  isDocumentUndo,
+  isWebviewReady,
+  validateEditOperations,
+  type DiagramMessage,
+  type EditResultMessage,
+} from "./webview/protocol.js";
+import { applyOperations } from "@modelica-studio/modelica";
 import { createNonce } from "./webview/nonce.js";
 
 /**
@@ -113,6 +122,18 @@ export class DiagramEditorProvider implements vscode.CustomTextEditorProvider {
     const messageSubscription = panel.webview.onDidReceiveMessage((message: unknown) => {
       if (isWebviewReady(message)) {
         refresh();
+        return;
+      }
+      if (isDocumentEdit(message)) {
+        void this.handleEdit(document, panel, message.revision, message.payload);
+        return;
+      }
+      if (isDocumentUndo(message)) {
+        void vscode.commands.executeCommand("undo");
+        return;
+      }
+      if (isDocumentRedo(message)) {
+        void vscode.commands.executeCommand("redo");
       }
     });
 
@@ -131,10 +152,96 @@ export class DiagramEditorProvider implements vscode.CustomTextEditorProvider {
       if (className === undefined) {
         return statusMessage("This file does not define a class the compiler can load.");
       }
-      return await buildSceneMessage(annotationSource(session), className);
+      return await buildSceneMessage(annotationSource(session), className, document.version);
     });
     return message ?? statusMessage("OpenModelica is unavailable; see the Modelica Studio output.");
   }
+
+  /**
+   * Applies a canvas edit requested by the webview.
+   *
+   * The patch engine is the single writer of `.mo` bytes: validation, revision
+   * check and the smallest possible text edit all happen here on the host. A
+   * rejected edit — stale revision, unknown component, unsupported kind — never
+   * touches the document; the last good diagram stays on screen and the canvas
+   * is told why so the user is not left wondering why nothing moved.
+   */
+  private async handleEdit(
+    document: vscode.TextDocument,
+    panel: vscode.WebviewPanel,
+    baseRevision: number,
+    payload: readonly unknown[],
+  ): Promise<void> {
+    const post = (message: EditResultMessage): void => {
+      if (panel.visible) {
+        void panel.webview.postMessage(message);
+      }
+    };
+
+    const valid = validateEditOperations(payload);
+    if (!valid.ok) {
+      post({
+        version: CONTRACT_VERSION,
+        type: "edit/result",
+        payload: { ok: false, reason: valid.reason, revision: document.version },
+      });
+      return;
+    }
+
+    try {
+      const result = applyOperations(
+        document.getText(),
+        document.version,
+        baseRevision,
+        valid.operations as readonly DomainOperation[],
+      );
+      const fullRange = new vscode.Range(
+        document.positionAt(0),
+        document.positionAt(document.getText().length),
+      );
+      const edit = new vscode.WorkspaceEdit();
+      edit.replace(document.uri, fullRange, result.text);
+      const applied = await vscode.workspace.applyEdit(edit);
+      if (!applied) {
+        post({
+          version: CONTRACT_VERSION,
+          type: "edit/result",
+          payload: {
+            ok: false,
+            reason: "could not write the document",
+            revision: document.version,
+          },
+        });
+        return;
+      }
+      post({
+        version: CONTRACT_VERSION,
+        type: "edit/result",
+        payload: {
+          ok: true,
+          revision: result.revision,
+          status: editStatus(valid.operations),
+        },
+      });
+    } catch (error) {
+      // StaleRevisionError / TargetNotFoundError / UnsupportedOperationError:
+      // the source is left exactly as it was, and the reason is redacted of any
+      // paths before reaching the on-screen status line.
+      const reason = error instanceof Error ? redactPaths(error.message) : "edit failed";
+      post({
+        version: CONTRACT_VERSION,
+        type: "edit/result",
+        payload: { ok: false, reason, revision: document.version },
+      });
+    }
+  }
+}
+
+/** One line summarising what an applied edit changed, for the status row. */
+function editStatus(operations: readonly DomainOperation[]): string {
+  const count = operations.length;
+  const verb = count === 1 ? operations[0]!.kind : `${count} operations`;
+  return `Applied ${verb} (${count} text edit${count === 1 ? "" : "s"}).`;
 }
 
 function statusMessage(text: string): DiagramMessage {

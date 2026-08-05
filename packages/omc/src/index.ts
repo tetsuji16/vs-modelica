@@ -39,6 +39,9 @@ export {
   OmcSession,
   normalisePath,
   type AllowedFunction,
+  type BuildResult,
   type Capabilities,
   type SessionOptions,
+  type SimulationResult,
+  type SimulationSeries,
 } from "./session/session.js";

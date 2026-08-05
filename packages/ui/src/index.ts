@@ -37,3 +37,4 @@ export {
   type Viewport,
   type ViewportSize,
 } from "./view/viewport.js";
+export { screenDeltaToModel } from "./view/editMath.js";

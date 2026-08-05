@@ -35,9 +35,18 @@ importers:
 
   apps/vscode:
     dependencies:
+      '@modelica-studio/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
+      '@modelica-studio/animation':
+        specifier: workspace:*
+        version: link:../../packages/animation
       '@modelica-studio/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@modelica-studio/mcp':
+        specifier: workspace:*
+        version: link:../../packages/mcp
       '@modelica-studio/modelica':
         specifier: workspace:*
         version: link:../../packages/modelica
@@ -58,7 +67,49 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
+  packages/ai:
+    dependencies:
+      '@modelica-studio/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@modelica-studio/modelica':
+        specifier: workspace:*
+        version: link:../modelica
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+
+  packages/animation:
+    dependencies:
+      '@modelica-studio/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+
   packages/contracts: {}
+
+  packages/mcp:
+    dependencies:
+      '@modelica-studio/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@modelica-studio/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@modelica-studio/modelica':
+        specifier: workspace:*
+        version: link:../modelica
+      '@modelica-studio/omc':
+        specifier: workspace:*
+        version: link:../omc
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
 
   packages/modelica:
     dependencies:

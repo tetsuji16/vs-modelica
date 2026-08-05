@@ -197,3 +197,7 @@ export function asStringList(value: OmcValue): readonly string[] {
 export function asBoolean(value: OmcValue): boolean {
   return value === true;
 }
+
+export function asNumber(value: OmcValue): number {
+  return typeof value === "number" ? value : Number(value);
+}

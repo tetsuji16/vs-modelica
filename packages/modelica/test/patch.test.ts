@@ -1,11 +1,7 @@
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-  applyOperations,
-  StaleRevisionError,
-  UnsupportedOperationError,
-} from "../src/edit/patch.js";
+import { applyOperations, StaleRevisionError } from "../src/edit/patch.js";
 import { scanComponents } from "../src/edit/scanner.js";
 
 const FIXTURE = readFileSync(
@@ -182,14 +178,6 @@ describe("failure modes", () => {
     expect(() => move(FIXTURE, "notThere", 1, 1)).toThrow(/notThere/);
   });
 
-  it("throws for operations this slice does not implement", () => {
-    expect(() =>
-      applyOperations(FIXTURE, REVISION, REVISION, [
-        { kind: "addComponent", className: "A.B", instanceName: "c" },
-      ]),
-    ).toThrow(UnsupportedOperationError);
-  });
-
   it("applies nothing at all when one operation in a batch fails", () => {
     // Atomicity: a half-applied batch would leave the document in a state no
     // revision describes.
@@ -199,6 +187,68 @@ describe("failure modes", () => {
         { kind: "moveComponent", instanceName: "notThere", dx: 1, dy: 1 },
       ]),
     ).toThrow();
+  });
+});
+
+describe("addComponent", () => {
+  it("inserts a new component after the class header", () => {
+    const result = applyOperations(FIXTURE, REVISION, REVISION, [
+      { kind: "addComponent", className: "Modelica.Blocks.Sources.Constant", instanceName: "c1" },
+    ]);
+    expect(result.text).toContain("Modelica.Blocks.Sources.Constant c1;");
+    // The existing first component must still be present and unchanged.
+    expect(result.text).toContain("Modelica.Blocks.Sources.Step step(");
+  });
+
+  it("refuses a duplicate instance name", () => {
+    expect(() =>
+      applyOperations(FIXTURE, REVISION, REVISION, [
+        { kind: "addComponent", className: "A.B", instanceName: "step" },
+      ]),
+    ).toThrow(/already exists/);
+  });
+});
+
+describe("removeComponent", () => {
+  it("removes the whole declaration line", () => {
+    const result = applyOperations(FIXTURE, REVISION, REVISION, [
+      { kind: "removeComponent", instanceName: "step" },
+    ]);
+    expect(result.text).not.toContain("Step step(");
+    // A neighbouring declaration survives.
+    expect(result.text).toContain("FirstOrder lag(");
+  });
+
+  it("throws for a component that is not present", () => {
+    expect(() =>
+      applyOperations(FIXTURE, REVISION, REVISION, [
+        { kind: "removeComponent", instanceName: "ghost" },
+      ]),
+    ).toThrow(/ghost/);
+  });
+});
+
+describe("connect / disconnect", () => {
+  it("appends a connect statement", () => {
+    const result = applyOperations(FIXTURE, REVISION, REVISION, [
+      { kind: "connect", from: "step.y", to: "sum.u2" },
+    ]);
+    expect(result.text).toContain("connect(step.y, sum.u2);");
+  });
+
+  it("removes a matching connect statement", () => {
+    // Use a pair that does not already exist in the fixture, so disconnect
+    // removes exactly what connect added.
+    const connected = applyOperations(FIXTURE, REVISION, REVISION, [
+      { kind: "connect", from: "step.y", to: "sum.u2" },
+    ]);
+    expect(connected.text).toContain("connect(step.y, sum.u2);");
+    const disconnected = applyOperations(connected.text, connected.revision, connected.revision, [
+      { kind: "disconnect", from: "step.y", to: "sum.u2" },
+    ]);
+    expect(disconnected.text).not.toContain("connect(step.y, sum.u2)");
+    // The rest of the file is unchanged by the disconnect.
+    expect(disconnected.text).toContain("FirstOrder lag(");
   });
 });
 
