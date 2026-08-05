@@ -228,14 +228,20 @@ function inkSize(declared: ViewportSize): ViewportSize {
   if (svg === null || typeof svg.getBBox !== "function") {
     return declared;
   }
+  const viewBox = svg.viewBox.baseVal;
+  if (viewBox.width <= 0 || viewBox.height <= 0) {
+    return declared;
+  }
   let box: DOMRect;
   try {
     box = svg.getBBox();
   } catch {
     return declared;
   }
-  const viewBox = svg.viewBox.baseVal;
-  if (viewBox.width <= 0 || viewBox.height <= 0 || box.width <= 0 || box.height <= 0) {
+  // A zero/negative ink box (e.g. right after the SVG is adopted, before layout
+  // settles) is not a real measurement. Fall back to the declared size rather
+  // than letting fitViewport zoom the whole diagram to a tiny sliver at 279%.
+  if (box.width <= 0 || box.height <= 0) {
     return declared;
   }
   // How far the ink reaches from the viewBox origin, in user units, counting
@@ -244,6 +250,12 @@ function inkSize(declared: ViewportSize): ViewportSize {
   const minY = Math.min(viewBox.y, box.y);
   const spanX = Math.max(viewBox.x + viewBox.width, box.x + box.width) - minX;
   const spanY = Math.max(viewBox.y + viewBox.height, box.y + box.height) - minY;
+  // If the measured ink is smaller than the declared box (labels drawn inside the
+  // icon extent, or a clipped measurement), the declared size is the trustworthy
+  // bound for fitting — never zoom in past it.
+  if (spanX <= viewBox.width && spanY <= viewBox.height) {
+    return declared;
+  }
   const pxPerUnitX = declared.width / viewBox.width;
   const pxPerUnitY = declared.height / viewBox.height;
   // Ink that starts left of or above the viewBox origin would be cut off by the

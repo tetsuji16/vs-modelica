@@ -78,6 +78,25 @@ describe("fitViewport", () => {
   it("never produces NaN from a non-finite content size", () => {
     expect(fitViewport({ width: Number.NaN, height: 10 }, SIZE)).toEqual(IDENTITY_VIEWPORT);
   });
+
+  it("zooms a whole-system diagram OUT, never in, when it is larger than the viewport", () => {
+    // Regression for the 279% bug: inkSize() once handed fit a tight, clipped
+    // ink box (smaller than the declared extent) so the diagram opened blown
+    // up ~2.8x and unreadable. With the fix inkSize falls back to the declared
+    // size, and a full system fitted into a normal viewport must be <= 100%.
+    const system = { width: 1200, height: 900 };
+    const view = fitViewport(system, SIZE);
+    expect(view.scale).toBeLessThanOrEqual(1);
+    expect(view.scale).toBeGreaterThan(0);
+  });
+
+  it("still fits a genuinely tiny icon UP to fill the canvas (zoom-in is allowed for small content)", () => {
+    // The fix must not over-correct and refuse to zoom in for content that is
+    // legitimately small relative to the viewport.
+    const icon = { width: 40, height: 40 };
+    const view = fitViewport(icon, SIZE);
+    expect(view.scale).toBeGreaterThan(1);
+  });
 });
 
 describe("zoomAt", () => {

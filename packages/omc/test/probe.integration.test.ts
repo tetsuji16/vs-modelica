@@ -19,4 +19,27 @@ describe.skipIf(!installed)("installed OpenModelica handshake", () => {
     // Recorded verbatim in the phase gate report.
     console.log(`omc --version => ${env.version?.raw}`);
   }, 60_000);
+
+  it("finds the compiler even without ProgramFiles/OPENMODELICAHOME in the env", () => {
+    // Regression for the "compiler not found" bug: VS Code's Extension
+    // Development Host sanitises the environment it passes to the extension,
+    // so process.env['ProgramFiles'] can be empty even on a standard install.
+    // discovery must fall back to the fixed C:\\Program Files roots.
+    const savedProgramFiles = process.env["ProgramFiles"];
+    const savedProgramFilesX86 = process.env["ProgramFiles(x86)"];
+    const savedHome = process.env["OPENMODELICAHOME"];
+    try {
+      delete process.env["ProgramFiles"];
+      delete process.env["ProgramFiles(x86)"];
+      delete process.env["OPENMODELICAHOME"];
+      const found = discoverCandidates().find((c) => existsSync(c.executable));
+      expect(found, "compiler should be found via fixed-root fallback").toBeTruthy();
+      expect(found?.source).toBe("platform-default");
+    } finally {
+      if (savedProgramFiles !== undefined) process.env["ProgramFiles"] = savedProgramFiles;
+      if (savedProgramFilesX86 !== undefined)
+        process.env["ProgramFiles(x86)"] = savedProgramFilesX86;
+      if (savedHome !== undefined) process.env["OPENMODELICAHOME"] = savedHome;
+    }
+  });
 });

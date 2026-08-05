@@ -868,20 +868,26 @@ ${body}
     if (svg === null || typeof svg.getBBox !== "function") {
       return declared;
     }
+    const viewBox = svg.viewBox.baseVal;
+    if (viewBox.width <= 0 || viewBox.height <= 0) {
+      return declared;
+    }
     let box;
     try {
       box = svg.getBBox();
     } catch {
       return declared;
     }
-    const viewBox = svg.viewBox.baseVal;
-    if (viewBox.width <= 0 || viewBox.height <= 0 || box.width <= 0 || box.height <= 0) {
+    if (box.width <= 0 || box.height <= 0) {
       return declared;
     }
     const minX = Math.min(viewBox.x, box.x);
     const minY = Math.min(viewBox.y, box.y);
     const spanX = Math.max(viewBox.x + viewBox.width, box.x + box.width) - minX;
     const spanY = Math.max(viewBox.y + viewBox.height, box.y + box.height) - minY;
+    if (spanX <= viewBox.width && spanY <= viewBox.height) {
+      return declared;
+    }
     const pxPerUnitX = declared.width / viewBox.width;
     const pxPerUnitY = declared.height / viewBox.height;
     svg.style.transform = `translate(${(viewBox.x - minX) * pxPerUnitX}px, ${(viewBox.y - minY) * pxPerUnitY}px)`;

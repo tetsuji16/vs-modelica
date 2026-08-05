@@ -24,11 +24,30 @@ export interface OmcEnvironment {
 export type VersionProbe = (executable: string) => Promise<string | undefined>;
 
 function windowsProgramFilesEntries(): string[] {
-  const roots = [process.env["ProgramFiles"], process.env["ProgramFiles(x86)"]].filter(
-    (r): r is string => Boolean(r),
-  );
-  const found: string[] = [];
+  // VS Code's Extension Development Host (and packaged extension) may not
+  // inherit the `ProgramFiles` / `ProgramFiles(x86)` env vars that a normal
+  // shell exports — VS Code sanitises the environment it hands to child
+  // processes — so relying on them alone silently yields zero candidates and
+  // the extension reports "compiler not found" on a default Windows install.
+  // Fall back to the two well-known fixed roots whenever the env is missing.
+  const roots = [
+    process.env["ProgramFiles"],
+    process.env["ProgramFiles(x86)"],
+    "C:\\Program Files",
+    "C:\\Program Files (x86)",
+  ].filter((r): r is string => typeof r === "string" && r.trim() !== "");
+  // De-duplicate while preserving order.
+  const seen = new Set<string>();
+  const uniqueRoots: string[] = [];
   for (const root of roots) {
+    const norm = root.replace(/[/\\]$/, "");
+    if (!seen.has(norm.toLowerCase())) {
+      seen.add(norm.toLowerCase());
+      uniqueRoots.push(norm);
+    }
+  }
+  const found: string[] = [];
+  for (const root of uniqueRoots) {
     let entries: string[];
     try {
       entries = readdirSync(root);
