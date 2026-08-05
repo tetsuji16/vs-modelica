@@ -10,6 +10,12 @@
 
 loadModel(Modelica);
 getErrorString();
+// The Modelica standard library is not shipped with the omc package on every
+// platform, so fetch it explicitly if needed (OMC downloads it on first use).
+installPackage(Modelica, "4.1.0+maint.om");
+getErrorString();
+loadModel(Modelica);
+getErrorString();
 
 loadFile("SpeedControlledDCMotorDrive.mo");
 getErrorString();

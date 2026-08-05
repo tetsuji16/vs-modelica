@@ -97,6 +97,10 @@ try {
     [
       "loadModel(Modelica);",
       "getErrorString();",
+      'installPackage(Modelica, "4.1.0+maint.om");',
+      "getErrorString();",
+      "loadModel(Modelica);",
+      "getErrorString();",
       `loadFile("${editedPath.replaceAll("\\", "/")}");`,
       "getErrorString();",
       'print(checkModel(SpeedControlledDCMotorDrive) + "\\n");',
