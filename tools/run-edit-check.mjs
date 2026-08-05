@@ -95,7 +95,7 @@ try {
   writeFileSync(
     script,
     [
-      'loadModel(Modelica, {"4.0.0"});',
+      "loadModel(Modelica);",
       "getErrorString();",
       `loadFile("${editedPath.replaceAll("\\", "/")}");`,
       "getErrorString();",

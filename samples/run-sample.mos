@@ -8,7 +8,7 @@
 // simulates, so a regression in the OMC bridge shows up here as a failure
 // rather than as a blank canvas in the UI.
 
-loadModel(Modelica, {"4.0.0"});
+loadModel(Modelica);
 getErrorString();
 
 loadFile("SpeedControlledDCMotorDrive.mo");
