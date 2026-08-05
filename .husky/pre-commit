@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Block commits that do not pass the local gates. These are the same gates CI
+# runs (minus the OpenModelica end-to-end sample, which needs a real compiler
+# and is covered by the push-time check below).
+pnpm check && pnpm lint && pnpm test

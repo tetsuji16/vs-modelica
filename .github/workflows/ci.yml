@@ -47,13 +47,10 @@ jobs:
           cache: pnpm
       - name: Install OpenModelica
         run: |
-          for deb in deb deb-src; do
-            echo "$deb http://build.openmodelica.org/apt $(lsb_release -cs) release"
-          done | sudo tee /etc/apt/sources.list.d/openmodelica.list
           curl -fsSL http://build.openmodelica.org/apt/openmodelica.asc \
             | sudo gpg --dearmor -o /usr/share/keyrings/openmodelica.gpg
-          sudo sed -i "s|^deb |deb [signed-by=/usr/share/keyrings/openmodelica.gpg] |" \
-            /etc/apt/sources.list.d/openmodelica.list
+          echo "deb [signed-by=/usr/share/keyrings/openmodelica.gpg] http://build.openmodelica.org/apt $(lsb_release -cs) release" \
+            | sudo tee /etc/apt/sources.list.d/openmodelica.list
           sudo apt-get update
           sudo apt-get install -y omc omlib-modelica-4.0.0
       - run: pnpm install --frozen-lockfile
