@@ -1,0 +1,20 @@
+# Source and dev-only files that must never ship in the Marketplace package.
+**/*.map
+**/*.ts
+**/tsconfig.json
+**/.vscode-test*
+**/test/**
+**/dist/**/*.map
+node_modules/**
+.gitignore
+**/*.test.ts
+tools/**
+docs/**
+**/*.tsbuildinfo
+
+# Only the compiled extension and media belong in the package.
+!dist/**
+!media/**
+!language/**
+!src/**/*.js
+!src/**/*.d.ts

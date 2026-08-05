@@ -1,10 +1,15 @@
 {
-  "name": "@modelica-studio/vscode",
+  "name": "modelica-studio",
   "displayName": "Modelica Studio OSS",
   "description": "Open-source graphical Modelica editor powered by OpenModelica",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "publisher": "tetsuji16",
   "license": "MIT",
+  "icon": "media/activity-bar.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tetsuji16/vs-modelica"
+  },
   "engines": {
     "vscode": "^1.125.0"
   },
