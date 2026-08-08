@@ -35,8 +35,8 @@
         ],
         "configuration": "./language/modelica-language-configuration.json",
         "icon": {
-          "light": "./media/activity-bar.svg",
-          "dark": "./media/activity-bar.svg"
+          "light": "./media/activity-bar-light.svg",
+          "dark": "./media/activity-bar-dark.svg"
         }
       }
     ],
