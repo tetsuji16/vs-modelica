@@ -91,7 +91,7 @@
       },
       {
         "view": "modelicaStudio.models",
-        "contents": "No Modelica models were found in this workspace.\n[Open Diagram](command:modelicaStudio.open)"
+        "contents": "No Modelica models were found in this workspace.\n[New Model](command:modelicaStudio.newModel)\n[New Package](command:modelicaStudio.newPackage)"
       },
       {
         "view": "modelicaStudio.results",
@@ -181,6 +181,18 @@
         "title": "Filter Workspace Models",
         "category": "Modelica Studio",
         "icon": "$(search)"
+      },
+      {
+        "command": "modelicaStudio.newModel",
+        "title": "New Model",
+        "category": "Modelica Studio",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "modelicaStudio.newPackage",
+        "title": "New Package",
+        "category": "Modelica Studio",
+        "icon": "$(new-folder)"
       },
       {
         "command": "modelicaStudio.refreshViews",
@@ -295,9 +307,19 @@
           "group": "navigation@0"
         },
         {
+          "command": "modelicaStudio.newModel",
+          "when": "view == modelicaStudio.models",
+          "group": "navigation@1"
+        },
+        {
+          "command": "modelicaStudio.newPackage",
+          "when": "view == modelicaStudio.models",
+          "group": "navigation@2"
+        },
+        {
           "command": "modelicaStudio.refreshViews",
           "when": "view == modelicaStudio.models || view == modelicaStudio.elements",
-          "group": "navigation@1"
+          "group": "navigation@3"
         },
         {
           "command": "modelicaStudio.clearResults",
@@ -341,6 +363,12 @@
         },
         {
           "command": "modelicaStudio.searchModels"
+        },
+        {
+          "command": "modelicaStudio.newModel"
+        },
+        {
+          "command": "modelicaStudio.newPackage"
         },
         {
           "command": "modelicaStudio.refreshViews"

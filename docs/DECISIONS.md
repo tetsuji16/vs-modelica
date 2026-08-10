@@ -212,3 +212,22 @@ regression tests ensure the two Vitest projects cover each test exactly once.
 The Marketplace PNG remains a generated original asset. Its generator resolves
 the output relative to its own file rather than the caller's working directory,
 so regeneration from the repository root and from `apps/vscode` is identical.
+
+## ADR-019: new top-level classes are created atomically by the extension host
+
+- Status: accepted
+- Date: 2026-08-10
+
+The Models view creates a standalone top-level `model` or `package` through a
+single `WorkspaceEdit.createFile` operation whose initial UTF-8 contents are
+supplied with the resource creation. `overwrite` and `ignoreIfExists` are both
+false, so a collision fails instead of modifying an existing `.mo` file. This
+single resource operation also avoids leaving an empty file if a later text edit
+were to fail.
+
+Source rendering and name validation live in `@modelica-studio/modelica`; VS
+Code owns workspace choice, filesystem mutation, view refresh, and editor open.
+Only simple unquoted identifiers are accepted. Modelica keywords, paths, Windows
+device names, and impractically long file stems are rejected before a URI is
+formed. This keeps local, remote, virtual, and multi-root workspaces on the same
+host-controlled boundary without a shell or webview filesystem access.

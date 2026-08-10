@@ -39,6 +39,14 @@ suite("interactive OMC session (requires an installed OpenModelica)", () => {
     expect(await session.checkModel("MinimalModel")).toContain("MinimalModel");
   }, 60_000);
 
+  it("loads and checks the exact source produced by the new-model workflow", async () => {
+    const loaded = await session.loadFile(path.join(fixtures, "authoring/CreatedModel.mo"));
+    expect(loaded).toBe(true);
+    expect(await session.takeDiagnostics()).toEqual([]);
+    expect(await session.checkModel("CreatedModel")).toContain("CreatedModel");
+    expect(await session.takeDiagnostics()).toEqual([]);
+  }, 60_000);
+
   it("surfaces a real diagnostic for a bad model without inventing a range", async () => {
     await session.loadFile(path.join(fixtures, "syntax/BrokenModel.mo"));
     await session.takeDiagnostics();
