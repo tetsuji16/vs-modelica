@@ -17,8 +17,26 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["packages/*/test/**/*.test.ts", "apps/*/test/**/*.test.ts"],
-    environment: "node",
-    environmentMatchGlobs: [{ pattern: "packages/animation/**", environment: "jsdom" }],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          include: [
+            "packages/{contracts,omc,modelica,ui,ai,mcp}/test/**/*.test.ts",
+            "apps/*/test/**/*.test.ts",
+          ],
+          environment: "node",
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "animation-jsdom",
+          include: ["packages/animation/test/**/*.test.ts"],
+          environment: "jsdom",
+        },
+      },
+    ],
   },
 });
