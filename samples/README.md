@@ -58,11 +58,12 @@ result file back and asserts the physics:
 | `rejection` | the loop returns to the command after the 0.6 s load torque step                |
 | `alive`     | the drive actually drew armature current, so this is not a trivially dead model |
 
-The script prints the sampled times alongside the values, so it cannot silently
-assert against the wrong point on the trajectory. It also reads the point count
-out of the result file instead of assuming `numberOfIntervals + 1` — the solver
-emits event points in addition to the uniform grid, and assuming otherwise makes
-`readSimulationResult` fail with a dimension mismatch.
+The script prints the requested sample times alongside the values, so it cannot
+silently assert against the wrong point on the trajectory. It also reads and
+prints the point count to prove the result is non-empty. The assertions use
+OMC's scalar `val` query rather than loading whole result arrays into scripting
+variables: OMC echoes assignment values, so the latter would dump every sample
+to the transcript and make log size grow with the result file.
 
 `omc` exits 0 even when a script statement fails, so the runner treats the
 transcript as the signal and requires `SAMPLE OK`.
@@ -79,7 +80,8 @@ LOG_SUCCESS       | info    | The initialization finished successfully without h
 LOG_SUCCESS       | info    | The simulation finished successfully.
 
 --- results ---
-t[track] = 0.543 s, w = 120.357 rad/s
+points   = 508
+t[track] = 0.55 s, w = 120.287 rad/s
 t[end]   = 1.5 s, w = 120 rad/s
 tracking  OK
 rejection OK

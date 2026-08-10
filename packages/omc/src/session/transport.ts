@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
@@ -32,7 +32,7 @@ export interface TransportOptions {
 export class OmcTransportError extends Error {
   constructor(
     message: string,
-    readonly code: "startup" | "timeout" | "closed" | "crashed",
+    readonly code: "startup" | "timeout" | "closed" | "crashed" | "cancelled",
   ) {
     super(message);
     this.name = "OmcTransportError";
@@ -64,7 +64,12 @@ export class OmcTransport {
     const child = spawn(
       this.options.executable,
       ["--interactive=zmq", "--locale=C", `-z=${suffix}`, ...(this.options.extraArgs ?? [])],
-      { shell: false, windowsHide: true, cwd: this.workDir },
+      {
+        shell: false,
+        windowsHide: true,
+        cwd: this.workDir,
+        detached: process.platform !== "win32",
+      },
     );
     this.child = child;
     child.on("exit", () => {
@@ -144,13 +149,19 @@ export class OmcTransport {
   }
 
   /** Sends one scripting expression and resolves with the raw reply. */
-  async request(expression: string): Promise<string> {
-    const run = this.queue.then(() => this.sendSerialised(expression));
+  async request(expression: string, signal?: AbortSignal): Promise<string> {
+    if (signal?.aborted === true) {
+      throw cancelledError();
+    }
+    const run = this.queue.then(() => this.sendSerialised(expression, signal));
     this.queue = run.catch(() => undefined);
     return run;
   }
 
-  private async sendSerialised(expression: string): Promise<string> {
+  private async sendSerialised(expression: string, signal?: AbortSignal): Promise<string> {
+    if (signal?.aborted === true) {
+      throw cancelledError();
+    }
     if (this.state !== "ready" || this.socket === undefined) {
       throw new OmcTransportError(`OMC session is ${this.state}.`, "closed");
     }
@@ -158,6 +169,7 @@ export class OmcTransport {
     await socket.send(expression);
     const timeoutMs = this.options.requestTimeoutMs ?? 30_000;
     let timer: NodeJS.Timeout | undefined;
+    let abortListener: (() => void) | undefined;
     try {
       const reply = await Promise.race([
         socket.receive(),
@@ -167,6 +179,16 @@ export class OmcTransport {
               reject(new OmcTransportError(`OMC did not reply within ${timeoutMs} ms.`, "timeout")),
             timeoutMs,
           );
+        }),
+        new Promise<never>((_resolve, reject) => {
+          if (signal === undefined) {
+            return;
+          }
+          abortListener = () => reject(cancelledError());
+          signal.addEventListener("abort", abortListener, { once: true });
+          if (signal.aborted) {
+            abortListener();
+          }
         }),
       ]);
       return reply[0]!.toString();
@@ -178,6 +200,9 @@ export class OmcTransport {
     } finally {
       if (timer !== undefined) {
         clearTimeout(timer);
+      }
+      if (signal !== undefined && abortListener !== undefined) {
+        signal.removeEventListener("abort", abortListener);
       }
     }
   }
@@ -193,7 +218,7 @@ export class OmcTransport {
     }
     this.socket = undefined;
     if (this.child !== undefined && this.child.exitCode === null) {
-      this.child.kill();
+      terminateProcessTree(this.child);
     }
     this.child = undefined;
     if (this.workDir !== undefined) {
@@ -204,6 +229,32 @@ export class OmcTransport {
       }
       this.workDir = undefined;
     }
+  }
+}
+
+function cancelledError(): OmcTransportError {
+  return new OmcTransportError("OMC request was cancelled.", "cancelled");
+}
+
+function terminateProcessTree(child: ChildProcess): void {
+  const pid = child.pid;
+  if (pid === undefined) {
+    child.kill();
+    return;
+  }
+  if (process.platform === "win32") {
+    spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], {
+      shell: false,
+      windowsHide: true,
+      stdio: "ignore",
+      timeout: 5_000,
+    });
+    return;
+  }
+  try {
+    process.kill(-pid, "SIGKILL");
+  } catch {
+    child.kill("SIGKILL");
   }
 }
 

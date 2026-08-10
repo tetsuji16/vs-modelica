@@ -832,3 +832,45 @@ An MCP client cannot bypass domain validation: every mutation tool returns a
 No OpenModelica code, icons, strings beyond functional labels, or private
 formats were inspected, copied, linked, or bundled. Identity is `modelicaStudio.*`
 throughout; a regression test enforces the AGENTS.md identity rule.
+
+---
+
+## 2026-08-10 — Phase 4 sample execution audit
+
+Ran `samples/SpeedControlledDCMotorDrive.mo` end to end with the installed
+OpenModelica v1.27.0 (64-bit): load, `checkModel`, compile, simulate, and result
+queries all passed. The 508-point result tracked 120 rad/s before the disturbance,
+returned to 120 rad/s at 1.5 s, and drew non-zero armature current.
+
+The audit found that `data := readSimulationResult(...)` made OMC echo all three
+complete arrays. Besides noisy logs, the runner retained output proportional to
+the result size. The fixture now uses bounded scalar `val` queries for its three
+assertions, retains the non-empty point-count check, and has a static regression
+test preventing a return to full-array assignment.
+
+Verified: `pnpm sample`, `pnpm check`, `pnpm test` (46 files / 362 tests), and
+`pnpm test:visual` (4 baselines). Live `getVersion()` returned
+`OpenModelica v1.27.0 (64-bit)`.
+
+---
+
+## 2026-08-10 — Phase 4 adversarial cancellation review
+
+An adversarial pass found that the simulation progress notification claimed to
+be cancellable while `withCancellableSession` ignored its token. Cancelling the
+UI therefore left compilation or simulation running, and the operation could
+later be recorded as successful. This violated the long-operation contract.
+
+Cancellation now propagates through an `AbortSignal` to the serialised ZeroMQ
+request. An interrupted REQ/REP socket is closed and never reused, the OMC
+process tree is terminated, and the cancellation path is excluded from the
+automatic retry policy. A queued request cancelled before send leaves the
+current session healthy.
+
+Evidence includes a real OpenModelica test which begins compiling the DC motor,
+cancels after 250 ms, observes `cancelled` within five seconds, and verifies the
+session is poisoned. No OMC/compiler/simulation process remained afterward.
+
+Verified: `pnpm check`, `pnpm test` (48 files / 367 tests), `pnpm sample`, and
+`pnpm test:visual` (4 baselines). Live `getVersion()` returned
+`OpenModelica v1.27.0 (64-bit)`.

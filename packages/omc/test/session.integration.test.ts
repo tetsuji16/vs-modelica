@@ -76,4 +76,19 @@ suite("interactive OMC session (requires an installed OpenModelica)", () => {
       }
     }
   }, 120_000);
+
+  it("cancels a real simulation build and poisons the interrupted session", async () => {
+    expect(await session.loadLibrary("Modelica")).toBe(true);
+    expect(
+      await session.loadFile(path.resolve(fixtures, "../samples/SpeedControlledDCMotorDrive.mo")),
+    ).toBe(true);
+    const controller = new AbortController();
+    const started = Date.now();
+    const pending = session.simulate("SpeedControlledDCMotorDrive", [], controller.signal);
+    setTimeout(() => controller.abort(), 250);
+
+    await expect(pending).rejects.toMatchObject({ code: "cancelled" });
+    expect(Date.now() - started).toBeLessThan(5_000);
+    expect(session.status).toBe("crashed");
+  }, 90_000);
 });
