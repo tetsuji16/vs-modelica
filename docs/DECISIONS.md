@@ -197,3 +197,18 @@ POSIX starts OMC in its own process group and signals that group.
 A user cancellation is terminal for that operation and is never fed into the
 ordinary one-restart recovery path. Requests cancelled while still queued are
 rejected before send and do not poison an otherwise healthy session.
+
+## ADR-018: release tooling uses explicit current runtimes
+
+- Status: accepted
+- Date: 2026-08-10
+
+The root package declares ESM explicitly, Vitest separates Node and jsdom suites
+through `projects`, and the commit hook uses Husky 9's direct script format.
+GitHub Actions are pinned to Node 24-based action releases. These declarations
+remove heuristic module reparsing and deprecated compatibility shims, while
+regression tests ensure the two Vitest projects cover each test exactly once.
+
+The Marketplace PNG remains a generated original asset. Its generator resolves
+the output relative to its own file rather than the caller's working directory,
+so regeneration from the repository root and from `apps/vscode` is identical.

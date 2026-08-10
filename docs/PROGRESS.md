@@ -854,6 +854,23 @@ Verified: `pnpm sample`, `pnpm check`, `pnpm test` (46 files / 362 tests), and
 
 ---
 
+## 2026-08-10 — Phase 9 warning and Marketplace icon cleanup
+
+Included the pending Marketplace icon work and adversarially regenerated it
+from the repository root. That exposed a working-directory bug in the generator;
+it now resolves `media/activity-bar.png` relative to the script and reproduces
+SHA-256 `F1842CE3A171EB1CC89D0AB3172F40E4111BFA9CAB5A206455CF5ACEE9BFEBF3`.
+
+Removed all warnings seen in the local gates: the legacy Husky bootstrap,
+Vitest's deprecated `environmentMatchGlobs`, and Node's implicit ESM reparse.
+CI now pins Node 24-based `checkout`, `setup-node`, and `pnpm/action-setup`
+releases. Node and animation-jsdom test projects execute 49 files / 369 tests
+exactly once.
+
+Verified: `pnpm check`, `pnpm test`, `pnpm sample`, and `pnpm test:visual`.
+
+---
+
 ## 2026-08-10 — Phase 4 adversarial cancellation review
 
 An adversarial pass found that the simulation progress notification claimed to

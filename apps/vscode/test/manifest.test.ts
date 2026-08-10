@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
+import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { SIDEBAR_SECTIONS } from "@modelica-studio/ui";
 import manifest from "../package.json" with { type: "json" };
@@ -8,6 +9,35 @@ const views = manifest.contributes.views.modelicaStudio;
 const welcome = manifest.contributes.viewsWelcome;
 
 describe("extension manifest", () => {
+  it("uses theme-safe language and Marketplace icons", () => {
+    const icon = manifest.contributes.languages[0]!.icon;
+    expect(icon).toEqual({
+      light: "./media/activity-bar-light.svg",
+      dark: "./media/activity-bar-dark.svg",
+    });
+    for (const file of [icon.light, icon.dark, manifest.icon]) {
+      expect(existsSync(path.resolve(__dirname, "..", file)), file).toBe(true);
+    }
+
+    // The Marketplace icon must carry its own contrast.  A transparent icon
+    // with white strokes disappears against a light listing background.
+    const png = readFileSync(path.resolve(__dirname, "..", manifest.icon));
+    expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    const idat: Buffer[] = [];
+    for (let offset = 8; offset < png.length;) {
+      const length = png.readUInt32BE(offset);
+      const type = png.subarray(offset + 4, offset + 8).toString("ascii");
+      const data = png.subarray(offset + 8, offset + 8 + length);
+      if (type === "IDAT") idat.push(data);
+      offset += length + 12;
+    }
+    const pixels = inflateSync(Buffer.concat(idat));
+    // The generator emits filter type 0. Pixel (64, 0) is within the blue
+    // badge and not part of the white glyph.
+    expect(pixels[0]).toBe(0);
+    expect([...pixels.subarray(1 + 64 * 4, 1 + 64 * 4 + 4)]).toEqual([33, 150, 243, 255]);
+  });
+
   it("contributes the six sidebar sections in specification order", () => {
     expect(views.map((v) => v.id)).toEqual(SIDEBAR_SECTIONS.map((s) => s.id));
     expect(views.map((v) => v.name)).toEqual(SIDEBAR_SECTIONS.map((s) => s.title));

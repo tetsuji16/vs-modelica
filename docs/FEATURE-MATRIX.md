@@ -5,11 +5,11 @@ Status values: `not started`, `in progress`, `shell` (UI/boundary exists, behavi
 
 | Area            | Feature                                                              | Phase | Status      | Evidence                                                                                            |
 | --------------- | -------------------------------------------------------------------- | ----- | ----------- | --------------------------------------------------------------------------------------------------- |
-| Repository      | Workspace, lint, format, type-check, unit tests                      | 0     | done        | `pnpm check`, `pnpm test`                                                                           |
+| Repository      | Workspace, lint, format, type-check, unit tests                      | 0     | done        | `pnpm check`, `pnpm test`, `apps/vscode/test/tooling.test.ts`                                       |
 | Repository      | CI on Windows + Linux                                                | 0     | done        | `.github/workflows/ci.yml`                                                                          |
 | Repository      | Clean-room bundling guard                                            | 0     | done        | `tools/ci/assert-no-bundled-omc.mjs`                                                                |
 | Repository      | Dependency/provenance/PR templates, security policy                  | 0     | done        | `docs/DEPENDENCIES.md`, `SECURITY.md`                                                               |
-| Identity        | Original activity-bar icon                                           | 0     | done        | `apps/vscode/media/activity-bar.svg`                                                                |
+| Identity        | Original activity-bar and Marketplace icons                          | 0     | done        | `activity-bar*.svg`, deterministic `tools/make_icon.py`, manifest regression                        |
 | UI              | Design-token package                                                 | 0     | done        | `packages/ui/src/tokens.ts`                                                                         |
 | UI              | Six primary sidebar sections with empty states                       | 0     | done        | `apps/vscode/test/manifest.test.ts`                                                                 |
 | UI              | Libraries search with ranked, dot-segmented matching                 | 2     | done        | `apps/vscode/test/match.test.ts`                                                                    |

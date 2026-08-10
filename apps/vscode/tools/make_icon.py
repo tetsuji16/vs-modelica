@@ -1,11 +1,12 @@
-"""Generate the Marketplace icon (media/activity-bar.png) from activity-bar.svg.
+"""Generate the Marketplace icon (media/activity-bar.png).
 
-Pure stdlib PNG writer (no PIL needed). The SVG uses stroke=currentColor with no
-fill, so we rasterize the geometry at 128x128 on a transparent background with
-white strokes, matching the VS Code activity-bar convention.
+The Marketplace renders the icon on both light and dark surfaces.  It therefore
+uses a blue badge behind the white glyph instead of the transparent activity-bar
+SVG, whose ``currentColor`` treatment is appropriate only inside VS Code.
 """
 import struct
 import zlib
+from pathlib import Path
 
 W = H = 128
 # Scale factor from the 24x24 viewBox to 128x128.
@@ -57,9 +58,21 @@ def draw_circle(buf, cx, cy, r, color=(255, 255, 255, 255)):
                 buf[yy][xx] = color
 
 
+def draw_rounded_badge(buf, color=(33, 150, 243, 255), radius=22):
+    """Fill a 128px rounded square without external image dependencies."""
+    for yy in range(H):
+        for xx in range(W):
+            # Clamp to the nearest point of the corner-radius rectangle.  Pixel
+            # centres avoid a one-pixel flat edge at the rounded corners.
+            near_x = min(max(xx + 0.5, radius), W - radius)
+            near_y = min(max(yy + 0.5, radius), H - radius)
+            if (xx + 0.5 - near_x) ** 2 + (yy + 0.5 - near_y) ** 2 <= radius**2:
+                buf[yy][xx] = color
+
+
 def main():
     buf = [[(0, 0, 0, 0) for _ in range(W)] for _ in range(H)]
-    white = (255, 255, 255, 255)
+    draw_rounded_badge(buf)
     draw_rect(buf, 2.5, 9, 6, 6)
     draw_rect(buf, 15.5, 9, 6, 6)
     draw_line(buf, 8.5, 12, 15.5, 12)
@@ -85,9 +98,10 @@ def main():
     png += chunk(b"IHDR", struct.pack(">IIBBBBB", W, H, 8, 6, 0, 0, 0))
     png += chunk(b"IDAT", zlib.compress(bytes(raw), 9))
     png += chunk(b"IEND", b"")
-    with open("media/activity-bar.png", "wb") as f:
+    output = Path(__file__).resolve().parent.parent / "media" / "activity-bar.png"
+    with output.open("wb") as f:
         f.write(png)
-    print("wrote media/activity-bar.png")
+    print(f"wrote {output}")
 
 
 if __name__ == "__main__":
