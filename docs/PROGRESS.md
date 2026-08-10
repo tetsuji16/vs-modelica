@@ -891,3 +891,26 @@ session is poisoned. No OMC/compiler/simulation process remained afterward.
 Verified: `pnpm check`, `pnpm test` (48 files / 367 tests), `pnpm sample`, and
 `pnpm test:visual` (4 baselines). Live `getVersion()` returned
 `OpenModelica v1.27.0 (64-bit)`.
+
+---
+
+## 2026-08-10 — Phase 3 workspace Modelica file creation
+
+The post-merge authoring review found that the P0 Models tree could discover
+existing `.mo` files but offered no model or package creation path. The Models
+view now creates minimal standalone model/package source, refreshes the tree,
+and opens the result in the default diagram editor.
+
+The creation boundary rejects Modelica keywords, dotted/path-like input,
+Windows device names, and overlong stems. Multi-root users choose the target
+explicitly. A single non-overwriting workspace resource edit carries the UTF-8
+contents, so collisions and failed edits never report success or mutate an
+existing file.
+
+Evidence: `fixtures/authoring/CreatedModel.mo`, domain rendering/name tests,
+host failure-path tests, manifest reachability tests, and live OpenModelica
+`loadFile`/`checkModel` coverage. Live `getVersion()` returned
+`OpenModelica v1.27.0 (64-bit)`.
+
+Verified: `pnpm check`, `pnpm test` (51 files / 396 tests), `pnpm sample` (508
+points), and `pnpm test:visual` (4 baselines).

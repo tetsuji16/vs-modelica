@@ -33,6 +33,11 @@ export {
   type PlacementSpan,
 } from "./edit/scanner.js";
 export {
+  renderTopLevelClass,
+  validateTopLevelClassName,
+  type TopLevelClassKind,
+} from "./authoring.js";
+export {
   applyEdits,
   applyOperations,
   StaleRevisionError,

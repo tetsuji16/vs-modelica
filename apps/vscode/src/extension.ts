@@ -17,6 +17,7 @@ import { clearAiCredentials } from "./ai/config.js";
 import { McpBridge } from "./mcp.js";
 import { openAnimation } from "./animation.js";
 import { GdbDebugProvider, GdbController } from "./debug.js";
+import { createTopLevelClass } from "./modelCreation.js";
 
 const PRODUCT = "Modelica Studio OSS";
 
@@ -110,6 +111,14 @@ export function activate(context: vscode.ExtensionContext): void {
       }
       models.setFilter(query);
     }),
+
+    vscode.commands.registerCommand("modelicaStudio.newModel", () =>
+      createTopLevelClass("model", () => models.refresh()),
+    ),
+
+    vscode.commands.registerCommand("modelicaStudio.newPackage", () =>
+      createTopLevelClass("package", () => models.refresh()),
+    ),
 
     vscode.commands.registerCommand("modelicaStudio.refreshViews", () => {
       libraries.refresh();
