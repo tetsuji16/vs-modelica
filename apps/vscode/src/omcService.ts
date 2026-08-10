@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import {
   createSpawnVersionProbe,
   OmcSession,
+  OmcTransportError,
   resolveEnvironment,
   type Capabilities,
   type OmcEnvironment,
@@ -112,19 +113,47 @@ export class OmcService implements vscode.Disposable {
   /**
    * Runs an operation that drives a long simulation.
    *
-   * `token` is the VS Code progress cancellation token. The underlying transport
-   * does not yet support mid-flight abort, so cancellation here means the caller
-   * stops waiting; the operation is still recorded when it completes. The session
-   * is reused across retries like {@link withSession}.
+   * `token` is bridged to an AbortSignal understood by the transport. Cancelling
+   * an in-flight REQ/REP request poisons that socket by definition, so the session
+   * is disposed and never retried. Other crashes retain the one-restart policy.
    */
   async withCancellableSession<T>(
     token: vscode.CancellationToken,
-    operation: (session: OmcSession) => Promise<T>,
+    operation: (session: OmcSession, signal: AbortSignal) => Promise<T>,
   ): Promise<T | undefined> {
-    if (token.isCancellationRequested) {
-      return undefined;
+    const controller = new AbortController();
+    const subscription = token.onCancellationRequested(() => controller.abort());
+    if (token.isCancellationRequested) controller.abort();
+    try {
+      const session = await this.getSession();
+      if (session === undefined || controller.signal.aborted) return undefined;
+      try {
+        return await operation(session, controller.signal);
+      } catch (error) {
+        if (controller.signal.aborted || isCancellation(error)) {
+          this.output.appendLine("[omc] operation cancelled");
+          session.dispose();
+          if (this.session === session) this.session = undefined;
+          return undefined;
+        }
+        this.output.appendLine(`[omc] call failed: ${describe(error)}`);
+        if (session.status !== "ready") {
+          session.dispose();
+          if (this.session === session) this.session = undefined;
+          const restarted = await this.getSession();
+          if (restarted !== undefined && !controller.signal.aborted) {
+            try {
+              return await operation(restarted, controller.signal);
+            } catch (retryError) {
+              this.output.appendLine(`[omc] retry failed: ${describe(retryError)}`);
+            }
+          }
+        }
+        return undefined;
+      }
+    } finally {
+      subscription.dispose();
     }
-    return this.withSession(operation);
   }
 
   /** Reads simulation result variables through the OMC session. */
@@ -161,4 +190,8 @@ export class OmcService implements vscode.Disposable {
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function isCancellation(error: unknown): boolean {
+  return error instanceof OmcTransportError && error.code === "cancelled";
 }

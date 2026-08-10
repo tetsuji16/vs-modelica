@@ -65,6 +65,22 @@ describe("simulation calls", () => {
     const session = fakeSession("");
     await expect(session.simulate("Bad;Name")).rejects.toThrow(/Invalid class name/);
   });
+
+  it("forwards cancellation to the transport-facing call", async () => {
+    const session = fakeSession(
+      '{resultFile = "BouncingBall_res.mat", simulationOptions = "", errorMessage = ""}',
+    );
+    const call = vi.mocked(session.callRaw);
+    const signal = new AbortController().signal;
+
+    await session.simulate("BouncingBall", [], signal);
+
+    expect(call).toHaveBeenCalledWith(
+      "simulate",
+      [{ kind: "identifier", value: "BouncingBall" }],
+      signal,
+    );
+  });
 });
 
 describe("readSimulationResult", () => {

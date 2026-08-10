@@ -168,3 +168,32 @@ geometry, they have none. Anything that _should_ have rendered and could not is
 pushed to `scene.unsupported`: a component whose icon the compiler cannot resolve,
 or a `connect` equation with no `Line` annotation. A route is never guessed,
 because a guessed wire is a wire the model does not contain.
+
+## ADR-016: sample result checks use bounded scalar queries
+
+- Status: accepted
+- Date: 2026-08-10
+
+The end-to-end sample must validate generated simulation results without making
+its transcript grow with the number of result points. OMC echoes scripting
+assignment values, so assigning `readSimulationResult(...)` printed every value
+from every requested series and forced the Node runner to retain that output.
+The sample now checks the non-zero point count and queries only the three scalar
+values needed by its physics assertions through `val`. Full-series decoding
+remains covered at the typed `OmcSession.readSimulationResult` boundary.
+
+## ADR-017: cancellation destroys the active OMC process tree
+
+- Status: accepted
+- Date: 2026-08-10
+
+ZeroMQ REQ/REP cannot safely reuse a socket after abandoning an in-flight
+request: the late reply would be consumed by a later request. A simulation
+cancel therefore propagates as an `AbortSignal` from VS Code through
+`OmcSession` to the transport, closes the socket, marks the session crashed,
+and terminates the OMC process tree. Windows uses argv-only `taskkill /t /f`;
+POSIX starts OMC in its own process group and signals that group.
+
+A user cancellation is terminal for that operation and is never fed into the
+ordinary one-restart recovery path. Requests cancelled while still queued are
+rejected before send and do not poison an otherwise healthy session.

@@ -45,29 +45,27 @@ resultFile := "SpeedControlledDCMotorDrive_res.mat";
 print(getErrorString());
 
 print("--- results ---\n");
-// The actual point count is read from the file rather than assumed: the solver
-// may emit events in addition to the uniform grid, and assuming intervals + 1
-// makes readSimulationResult fail with a dimension mismatch.
+// Confirm that the result is non-empty, then query only the scalar values used
+// by the assertions. Assigning readSimulationResult(...) to a scripting
+// variable makes omc echo every sample to stdout, which turns this small check
+// into an unbounded transcript for larger result files.
 n := readSimulationResultSize(resultFile);
-data := readSimulationResult(resultFile, {time, load.w, armatureCurrent.i}, n);
-t := data[1];
-w := data[2];
-i := data[3];
+trackTime := 0.55;
+aliveTime := 0.3;
+wTrack := val(load.w, trackTime, resultFile);
+wEnd := val(load.w, stopTime, resultFile);
+iAlive := val(armatureCurrent.i, aliveTime, resultFile);
 
-iTrack := integer(0.55 / stopTime * (n - 1)) + 1;
-iEnd := n;
-
-// The sampled times are printed with the values, so the sample cannot silently
-// assert against the wrong point on the trajectory.
-print("t[track] = " + String(t[iTrack]) + " s, w = " + String(w[iTrack]) + " rad/s\n");
-print("t[end]   = " + String(t[iEnd]) + " s, w = " + String(w[iEnd]) + " rad/s\n");
+print("points   = " + String(n) + "\n");
+print("t[track] = " + String(trackTime) + " s, w = " + String(wTrack) + " rad/s\n");
+print("t[end]   = " + String(stopTime) + " s, w = " + String(wEnd) + " rad/s\n");
 
 // Tracking: the shaft reaches the 120 rad/s command before the disturbance.
-tracking := abs(w[iTrack] - 120) < 2.0;
+tracking := n > 0 and abs(wTrack - 120) < 2.0;
 // Rejection: the PI loop returns to the command after the 0.6 s torque step.
-rejection := abs(w[iEnd] - 120) < 2.0;
+rejection := n > 0 and abs(wEnd - 120) < 2.0;
 // Sanity: the drive actually drew current, so this is not a trivially dead model.
-alive := max(abs(i)) > 0.1;
+alive := n > 0 and abs(iAlive) > 0.1;
 
 print("tracking  " + (if tracking then "OK" else "FAILED") + "\n");
 print("rejection " + (if rejection then "OK" else "FAILED") + "\n");

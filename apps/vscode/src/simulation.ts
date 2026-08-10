@@ -37,10 +37,13 @@ export class SimulationRunner {
         cancellable: true,
       },
       async (_progress, token) => {
-        const result = await this.omc.withCancellableSession(token, (session) =>
-          session.simulate(className, options),
+        const result = await this.omc.withCancellableSession(token, (session, signal) =>
+          session.simulate(className, options, signal),
         );
         if (result === undefined) {
+          if (token.isCancellationRequested) {
+            return undefined;
+          }
           return {
             className,
             resultFile: "",

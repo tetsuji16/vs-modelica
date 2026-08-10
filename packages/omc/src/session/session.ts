@@ -122,13 +122,17 @@ export class OmcSession {
   }
 
   /** Calls an allowlisted scripting function and decodes the reply. */
-  async call(name: AllowedFunction, args: readonly OmcArgument[] = []): Promise<OmcValue> {
+  async call(
+    name: AllowedFunction,
+    args: readonly OmcArgument[] = [],
+    signal?: AbortSignal,
+  ): Promise<OmcValue> {
     if (!(ALLOWED_FUNCTIONS as readonly string[]).includes(name)) {
       throw new OmcCallError(`Scripting function is not allowlisted: ${name}`);
     }
     const expression = encodeCall(name, args);
     const started = Date.now();
-    const raw = await this.transport.request(expression);
+    const raw = await this.transport.request(expression, signal);
     this.options.onTrace?.({
       call: name,
       ms: Date.now() - started,
@@ -194,13 +198,17 @@ export class OmcSession {
    * through {@link decodeResult} would flatten records such as `Rectangle(...)`
    * and lose information. The annotation decoder needs the original text.
    */
-  async callRaw(name: AllowedFunction, args: readonly OmcArgument[] = []): Promise<string> {
+  async callRaw(
+    name: AllowedFunction,
+    args: readonly OmcArgument[] = [],
+    signal?: AbortSignal,
+  ): Promise<string> {
     if (!(ALLOWED_FUNCTIONS as readonly string[]).includes(name)) {
       throw new OmcCallError(`Scripting function is not allowlisted: ${name}`);
     }
     const expression = encodeCall(name, args);
     const started = Date.now();
-    const raw = await this.transport.request(expression);
+    const raw = await this.transport.request(expression, signal);
     this.options.onTrace?.({
       call: name,
       ms: Date.now() - started,
@@ -265,7 +273,11 @@ export class OmcSession {
    * host needs. Options are passed verbatim (already validated on the caller
    * side as comma-separated Modelica literals).
    */
-  async buildModel(className: string, options: readonly string[] = []): Promise<BuildResult> {
+  async buildModel(
+    className: string,
+    options: readonly string[] = [],
+    signal?: AbortSignal,
+  ): Promise<BuildResult> {
     if (!isModelicaName(className)) {
       throw new OmcCallError(`Invalid class name: ${className}`);
     }
@@ -273,7 +285,7 @@ export class OmcSession {
     if (options.length > 0) {
       args.push(arg.string(options.join(",")));
     }
-    const raw = await this.callRaw("buildModel", args);
+    const raw = await this.callRaw("buildModel", args, signal);
     return parseModelRecord(raw);
   }
 
@@ -284,7 +296,11 @@ export class OmcSession {
    * executes, so the result is ready for the results tree without a second call.
    * Long runs are cancellable through the transport's request cancellation.
    */
-  async simulate(className: string, options: readonly string[] = []): Promise<SimulationResult> {
+  async simulate(
+    className: string,
+    options: readonly string[] = [],
+    signal?: AbortSignal,
+  ): Promise<SimulationResult> {
     if (!isModelicaName(className)) {
       throw new OmcCallError(`Invalid class name: ${className}`);
     }
@@ -292,7 +308,7 @@ export class OmcSession {
     if (options.length > 0) {
       args.push(arg.string(options.join(",")));
     }
-    const raw = await this.callRaw("simulate", args);
+    const raw = await this.callRaw("simulate", args, signal);
     return parseModelRecord(raw);
   }
 

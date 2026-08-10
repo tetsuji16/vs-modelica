@@ -2,11 +2,21 @@ import { describe, expect, it, vi } from "vitest";
 import type { OmcService } from "../src/omcService.js";
 import type { SimulationResult } from "@modelica-studio/omc";
 
+const progressState = vi.hoisted(() => ({ cancelled: false }));
+
 vi.mock("vscode", () => {
   const withProgress = async (
     _options: unknown,
     task: (p: unknown, token: unknown) => Promise<unknown>,
-  ): Promise<unknown> => task({}, { isCancellationRequested: false });
+  ): Promise<unknown> =>
+    task(
+      {},
+      {
+        get isCancellationRequested() {
+          return progressState.cancelled;
+        },
+      },
+    );
   class EventEmitter<T> {
     private readonly listeners: ((value: T) => void)[] = [];
     event = (listener: (value: T) => void): void => {
@@ -92,6 +102,40 @@ describe("SimulationRunner", () => {
     await runner.run("Model");
     runner.clear();
     expect(runner.list()).toHaveLength(0);
+  });
+
+  it("forwards the cancellation signal and reports cancellation explicitly", async () => {
+    let forwarded: AbortSignal | undefined;
+    const omc = {
+      withCancellableSession: vi.fn(async (_token, operation) => {
+        const controller = new AbortController();
+        controller.abort();
+        forwarded = controller.signal;
+        await operation(
+          {
+            simulate: vi.fn(async (_className, _options, signal) => {
+              expect(signal).toBe(forwarded);
+              return undefined;
+            }),
+          },
+          forwarded,
+        );
+        return undefined;
+      }),
+    } as unknown as OmcService;
+    const runner = new SimulationRunner(omc);
+    progressState.cancelled = true;
+    try {
+      const entry = await runner.run("Model");
+      expect(forwarded?.aborted).toBe(true);
+      expect(entry).toMatchObject({
+        ok: false,
+        resultFile: "",
+        messages: "Simulation cancelled.",
+      });
+    } finally {
+      progressState.cancelled = false;
+    }
   });
 });
 
