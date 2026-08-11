@@ -231,3 +231,27 @@ Only simple unquoted identifiers are accepted. Modelica keywords, paths, Windows
 device names, and impractically long file stems are rejected before a URI is
 formed. This keeps local, remote, virtual, and multi-root workspaces on the same
 host-controlled boundary without a shell or webview filesystem access.
+
+## ADR-020: nested authoring derives `within` from selected package declarations
+
+- Status: accepted
+- Date: 2026-08-11
+
+Nested creation discovers `package.mo` files in the selected workspace root and
+uses the declaration's leading `within` clause plus package name as the parent
+class path. Creating a model writes `within Parent;` into the new sibling `.mo`.
+Creating a package makes `Parent/Child/package.mo` and writes `within Parent;`
+there. Parent package files are never edited, so comments, ordering, annotations,
+and unknown constructs stay byte-identical.
+
+The package directory is checked before creation. A file collision remains a
+non-overwriting workspace edit. If the second step fails after a new directory
+exists, the extension reports that the empty directory may remain rather than
+racing to delete a path another process could have populated.
+
+Nested Modelica source cannot be passed directly to OMC `loadFile`: OMC treats
+the file's directory as a package root and rejects its non-empty `within` clause.
+The extension therefore derives the outer `package.mo` path from the declaration
+and loads that root for diagnostics, the Models tree, and diagram discovery. It
+still filters compiler results by the original document path, so loading a root
+does not make unrelated classes appear as though they came from the document.

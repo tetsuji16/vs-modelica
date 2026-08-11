@@ -37,11 +37,13 @@ export function samePath(left: string, right: string): boolean {
 export async function findClassesInFile(
   locator: ClassLocator,
   absolutePath: string,
+  loadPath = absolutePath,
 ): Promise<readonly string[]> {
-  if (!(await locator.loadFile(absolutePath))) {
+  if (!(await locator.loadFile(loadPath))) {
     return [];
   }
   const found: string[] = [];
+  const loadedPackageRoot = !samePath(loadPath, absolutePath);
   const visit = async (parent: string | undefined, depth: number): Promise<void> => {
     if (depth > MAX_DEPTH) {
       return;
@@ -54,13 +56,16 @@ export async function findClassesInFile(
       } catch {
         continue;
       }
-      if (!samePath(source, absolutePath)) {
-        continue;
+      const belongsToFile = samePath(source, absolutePath);
+      if (belongsToFile) {
+        // A package that lives in this file may still contain the interesting
+        // model, so record it and keep descending.
+        found.push(qualified);
       }
-      // A package that lives in this file may still contain the interesting
-      // model, so record it and keep descending.
-      found.push(qualified);
-      if (await locator.isPackage(qualified)) {
+      // Loading a nested document's package root is the one safe exception to
+      // the usual rule against walking unrelated package files. It is bounded
+      // and still retains only classes sourced from the requested document.
+      if ((await locator.isPackage(qualified)) && (belongsToFile || loadedPackageRoot)) {
         await visit(qualified, depth + 1);
       }
     }

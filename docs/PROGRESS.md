@@ -914,3 +914,24 @@ host failure-path tests, manifest reachability tests, and live OpenModelica
 
 Verified: `pnpm check`, `pnpm test` (51 files / 396 tests), `pnpm sample` (508
 points), and `pnpm test:visual` (4 baselines).
+
+---
+
+## 2026-08-11 — Phase 3 nested Modelica authoring completion
+
+The remaining new-file workflow now discovers workspace `package.mo` files as
+destinations. A model created inside a selected package receives its declared
+`within` path. A child package uses conventional directory storage:
+`Parent/Child/package.mo`. No existing `.mo` file is edited during either action.
+
+The destination scan skips unreadable package metadata with a visible warning.
+Existing child directories are rejected before writing source. If a new directory
+was made but the non-overwriting `package.mo` creation fails, the error explains
+that the empty directory may remain; it is not deleted automatically because a
+concurrent actor might have populated it.
+
+The nested fixture loads and checks as `PackageRoot.NestedModel` with installed
+OpenModelica `v1.27.0 (64-bit)`.
+
+Verified: `pnpm check`, `pnpm test` (52 files / 410 tests), `pnpm sample` (508
+points), and `pnpm test:visual` (4 baselines).

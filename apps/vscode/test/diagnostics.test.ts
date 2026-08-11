@@ -34,7 +34,7 @@ describe("classNameOf", () => {
     expect(classNameOf({ getText: () => 'model M "c"\nend M;' })).toBe("M");
     expect(classNameOf({ getText: () => "// note\npackage P\nend P;" })).toBe("P");
     expect(classNameOf({ getText: () => "encapsulated partial model Abs\nend Abs;" })).toBe("Abs");
-    expect(classNameOf({ getText: () => "within Foo;\nblock B\nend B;" })).toBe("B");
+    expect(classNameOf({ getText: () => "within Foo;\nblock B\nend B;" })).toBe("Foo.B");
   });
 
   it("returns undefined rather than guessing when no class header exists", () => {

@@ -33,8 +33,10 @@ export {
   type PlacementSpan,
 } from "./edit/scanner.js";
 export {
+  parseWithinClause,
   renderTopLevelClass,
   validateTopLevelClassName,
+  validateWithinName,
   type TopLevelClassKind,
 } from "./authoring.js";
 export {
