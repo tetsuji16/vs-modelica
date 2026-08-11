@@ -87,6 +87,18 @@ describe("findClassesInFile", () => {
     expect(compiler.calls).toEqual([`loadFile(${FILE})`]);
   });
 
+  it("loads a package root while still matching classes to the nested document", async () => {
+    const root = "C:/work/Root/package.mo";
+    const nested = "C:/work/Root/Nested.mo";
+    const compiler = locator({
+      Root: { source: root, package: true, children: ["Nested"] },
+      "Root.Nested": { source: nested },
+    });
+
+    expect(await findClassesInFile(compiler, nested, root)).toEqual(["Root.Nested"]);
+    expect(compiler.calls[0]).toBe(`loadFile(${root})`);
+  });
+
   it("skips a class whose source the compiler refuses to report", async () => {
     const compiler = locator(
       { Broken: { source: FILE }, Motor: { source: FILE } },

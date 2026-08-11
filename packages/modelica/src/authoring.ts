@@ -85,11 +85,73 @@ export function validateTopLevelClassName(name: string): string | undefined {
   return undefined;
 }
 
+/** Validates the qualified parent package used in a `within` clause. */
+export function validateWithinName(within: string): string | undefined {
+  const segments = within.split(".");
+  if (segments.length === 0 || segments.some((segment) => segment === "")) {
+    return "Use a dotted sequence of Modelica package identifiers.";
+  }
+  for (const segment of segments) {
+    const error = validateTopLevelClassName(segment);
+    if (error !== undefined) {
+      return error;
+    }
+  }
+  return undefined;
+}
+
+function skipLeadingTrivia(source: string): number {
+  let offset = 0;
+  for (;;) {
+    while (offset < source.length && /\s/.test(source[offset]!)) {
+      offset += 1;
+    }
+    if (source.startsWith("//", offset)) {
+      const newline = source.indexOf("\n", offset + 2);
+      offset = newline === -1 ? source.length : newline + 1;
+      continue;
+    }
+    if (source.startsWith("/*", offset)) {
+      const close = source.indexOf("*/", offset + 2);
+      offset = close === -1 ? source.length : close + 2;
+      continue;
+    }
+    return offset;
+  }
+}
+
+/**
+ * Reads an optional leading `within` clause without interpreting class bodies.
+ * `undefined` means the file declares no parent package (or is incomplete).
+ */
+export function parseWithinClause(source: string): string | undefined {
+  const start = skipLeadingTrivia(source);
+  if (!/^within\b/.test(source.slice(start))) {
+    return undefined;
+  }
+  const clause = source.slice(start + "within".length);
+  const match = /^\s*([A-Za-z_][A-Za-z0-9_]*(?:\s*\.\s*[A-Za-z_][A-Za-z0-9_]*)*)\s*;/.exec(clause);
+  if (match?.[1] === undefined) {
+    return undefined;
+  }
+  const within = match[1].replaceAll(/\s/g, "");
+  return validateWithinName(within) === undefined ? within : undefined;
+}
+
 /** Produces the smallest standalone top-level class without hidden dependencies. */
-export function renderTopLevelClass(kind: TopLevelClassKind, name: string): string {
+export function renderTopLevelClass(
+  kind: TopLevelClassKind,
+  name: string,
+  within?: string,
+): string {
   const error = validateTopLevelClassName(name);
   if (error !== undefined) {
     throw new Error(error);
   }
-  return `${kind} ${name}\nend ${name};\n`;
+  const withinError = within === undefined ? undefined : validateWithinName(within);
+  if (withinError !== undefined) {
+    throw new Error(withinError);
+  }
+  const prefix = within === undefined ? "" : `within ${within};\n\n`;
+  return `${prefix}${kind} ${name}\nend ${name};\n`;
 }

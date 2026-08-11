@@ -3,6 +3,7 @@ import { redactPaths } from "./redact.js";
 import { CONTRACT_VERSION, type DomainOperation } from "@modelica-studio/contracts";
 import { annotationSource } from "./annotationSource.js";
 import { buildSceneMessage, findClassesInFile, pickDisplayClass } from "./diagramScene.js";
+import { modelicaRootFile } from "./packageRoot.js";
 import type { OmcService } from "./omcService.js";
 import { buildDiagramHtml, diagramStylesheet } from "./webview/diagramHtml.js";
 import {
@@ -147,7 +148,11 @@ export class DiagramEditorProvider implements vscode.CustomTextEditorProvider {
   private async render(document: vscode.TextDocument): Promise<DiagramMessage> {
     const path = document.uri.fsPath;
     const message = await this.omc.withSession(async (session) => {
-      const classNames = await findClassesInFile(session, path);
+      const classNames = await findClassesInFile(
+        session,
+        path,
+        modelicaRootFile(path, document.getText()),
+      );
       const className = await pickDisplayClass(session, classNames);
       if (className === undefined) {
         return statusMessage("This file does not define a class the compiler can load.");

@@ -6,6 +6,12 @@ const showInputBox = vi.fn(async () => undefined as string | undefined);
 const showQuickPick = vi.fn(async () => undefined as unknown);
 const applyEdit = vi.fn(async () => true);
 const executeCommand = vi.fn(async () => undefined);
+const findFiles = vi.fn(async () => [] as ReturnType<typeof uri>[]);
+const readFile = vi.fn(async () => new TextEncoder().encode(""));
+const stat = vi.fn(async () => {
+  throw FileSystemError.FileNotFound();
+});
+const createDirectory = vi.fn(async () => undefined);
 
 const workspaceState: { workspaceFolders: unknown[] | undefined } = {
   workspaceFolders: undefined,
@@ -19,11 +25,33 @@ class WorkspaceEdit {
   }
 }
 
+class FileSystemError extends Error {
+  constructor(readonly code: string) {
+    super(code);
+  }
+
+  static FileNotFound(): FileSystemError {
+    return new FileSystemError("FileNotFound");
+  }
+}
+
 function uri(value: string) {
-  return { fsPath: value, path: value, toString: () => value };
+  return {
+    fsPath: value,
+    path: value,
+    toString: () => value,
+    with: ({ path }: { path: string }) => uri(path),
+  };
 }
 
 vi.mock("vscode", () => ({
+  FileSystemError,
+  RelativePattern: class RelativePattern {
+    constructor(
+      readonly base: unknown,
+      readonly pattern: string,
+    ) {}
+  },
   WorkspaceEdit,
   Uri: {
     joinPath: (base: ReturnType<typeof uri>, child: string) => uri(`${base.fsPath}/${child}`),
@@ -33,6 +61,9 @@ vi.mock("vscode", () => ({
       return workspaceState.workspaceFolders;
     },
     applyEdit,
+    findFiles,
+    asRelativePath: (value: ReturnType<typeof uri>) => value.fsPath,
+    fs: { readFile, stat, createDirectory },
   },
   window: { showWarningMessage, showErrorMessage, showInputBox, showQuickPick },
   commands: { executeCommand },
@@ -47,6 +78,12 @@ describe("createTopLevelClass", () => {
     workspaceState.workspaceFolders = [root];
     vi.clearAllMocks();
     applyEdit.mockResolvedValue(true);
+    findFiles.mockResolvedValue([]);
+    readFile.mockResolvedValue(new TextEncoder().encode(""));
+    stat.mockImplementation(async () => {
+      throw FileSystemError.FileNotFound();
+    });
+    createDirectory.mockResolvedValue(undefined);
   });
 
   it("does nothing except explain the missing-workspace state", async () => {
@@ -118,10 +155,101 @@ describe("createTopLevelClass", () => {
       uri: ReturnType<typeof uri>;
       options: { contents: Uint8Array };
     };
-    expect(operation.uri.fsPath).toBe("vscode-remote:///other/Controls.mo");
+    expect(operation.uri.fsPath).toBe("vscode-remote:///other/Controls/package.mo");
     expect(new TextDecoder().decode(operation.options.contents)).toBe(
       "package Controls\nend Controls;\n",
     );
+  });
+
+  it("creates a model within the selected existing package", async () => {
+    const packageFile = uri("file:///workspace/PackageRoot/package.mo");
+    findFiles.mockResolvedValueOnce([packageFile]);
+    readFile.mockResolvedValueOnce(
+      new TextEncoder().encode("package PackageRoot\nend PackageRoot;\n"),
+    );
+    showQuickPick.mockResolvedValueOnce({
+      label: "PackageRoot",
+      directory: uri("file:///workspace/PackageRoot"),
+      within: "PackageRoot",
+    });
+    showInputBox.mockResolvedValueOnce("NestedModel");
+
+    await createTopLevelClass("model", vi.fn());
+
+    const edit = applyEdit.mock.calls[0]![0] as WorkspaceEdit;
+    const operation = edit.operations[0] as {
+      uri: ReturnType<typeof uri>;
+      options: { contents: Uint8Array };
+    };
+    expect(operation.uri.fsPath).toBe("file:///workspace/PackageRoot/NestedModel.mo");
+    expect(new TextDecoder().decode(operation.options.contents)).toBe(
+      "within PackageRoot;\n\nmodel NestedModel\nend NestedModel;\n",
+    );
+  });
+
+  it("creates a child package as directory-backed package.mo", async () => {
+    const packageFile = uri("file:///workspace/PackageRoot/package.mo");
+    findFiles.mockResolvedValueOnce([packageFile]);
+    readFile.mockResolvedValueOnce(
+      new TextEncoder().encode("package PackageRoot\nend PackageRoot;\n"),
+    );
+    const parent = uri("file:///workspace/PackageRoot");
+    showQuickPick.mockResolvedValueOnce({
+      label: "PackageRoot",
+      directory: parent,
+      within: "PackageRoot",
+    });
+    showInputBox.mockResolvedValueOnce("Examples");
+
+    await createTopLevelClass("package", vi.fn());
+
+    expect(createDirectory).toHaveBeenCalledWith(
+      expect.objectContaining({ fsPath: "file:///workspace/PackageRoot/Examples" }),
+    );
+    const edit = applyEdit.mock.calls[0]![0] as WorkspaceEdit;
+    const operation = edit.operations[0] as {
+      uri: ReturnType<typeof uri>;
+      options: { contents: Uint8Array };
+    };
+    expect(operation.uri.fsPath).toBe("file:///workspace/PackageRoot/Examples/package.mo");
+    expect(new TextDecoder().decode(operation.options.contents)).toBe(
+      "within PackageRoot;\n\npackage Examples\nend Examples;\n",
+    );
+  });
+
+  it("refuses an existing child-package directory before writing source", async () => {
+    showInputBox.mockResolvedValueOnce("Examples");
+    stat.mockResolvedValueOnce({});
+
+    await createTopLevelClass("package", vi.fn());
+
+    expect(showErrorMessage).toHaveBeenCalledWith(
+      expect.stringContaining("directory already exists"),
+    );
+    expect(createDirectory).not.toHaveBeenCalled();
+    expect(applyEdit).not.toHaveBeenCalled();
+  });
+
+  it("reports a package-file failure without claiming that the package exists", async () => {
+    showInputBox.mockResolvedValueOnce("Examples");
+    applyEdit.mockResolvedValueOnce(false);
+
+    await createTopLevelClass("package", vi.fn());
+
+    expect(showErrorMessage).toHaveBeenCalledWith(
+      expect.stringContaining("could not create Examples/package.mo"),
+    );
+    expect(executeCommand).not.toHaveBeenCalled();
+  });
+
+  it("stops safely when package discovery cannot run", async () => {
+    findFiles.mockRejectedValueOnce(new Error("unavailable"));
+
+    await createTopLevelClass("model", vi.fn());
+
+    expect(showErrorMessage).toHaveBeenCalledWith(expect.stringContaining("could not discover"));
+    expect(showInputBox).not.toHaveBeenCalled();
+    expect(applyEdit).not.toHaveBeenCalled();
   });
 
   it.each([false, new Error("collision")])(

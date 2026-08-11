@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import type { Diagnostic as ContractDiagnostic } from "@modelica-studio/contracts";
 import type { OmcService } from "./omcService.js";
+import { modelicaRootFile, qualifyClassName } from "./packageRoot.js";
 
 const SEVERITY: Record<ContractDiagnostic["severity"], vscode.DiagnosticSeverity> = {
   error: vscode.DiagnosticSeverity.Error,
@@ -40,7 +41,7 @@ export class DiagnosticsPublisher implements vscode.Disposable {
       return;
     }
     const diagnostics = await this.omc.withSession(async (session) => {
-      await session.loadFile(document.uri.fsPath);
+      await session.loadFile(modelicaRootFile(document.uri.fsPath, document.getText()));
       const load = await session.takeDiagnostics(document.uri.fsPath);
       const className = classNameOf(document);
       let check: readonly ContractDiagnostic[] = [];
@@ -77,7 +78,7 @@ export function classNameOf(document: { getText(): string }): string | undefined
     /^\s*(?:encapsulated\s+)?(?:partial\s+)?(?:final\s+)?(model|package|class|block|connector|record|function|type)\s+([A-Za-z_][A-Za-z0-9_]*)/m.exec(
       document.getText(),
     );
-  return match?.[2];
+  return match?.[2] === undefined ? undefined : qualifyClassName(match[2], document.getText());
 }
 
 export function sameFile(a: string, b: string): boolean {

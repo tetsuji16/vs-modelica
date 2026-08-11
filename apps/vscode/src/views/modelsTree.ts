@@ -3,6 +3,7 @@ import { findClassesInFile } from "../diagramScene.js";
 import type { OmcService } from "../omcService.js";
 import { ClassNode } from "./librariesTree.js";
 import { rankMatches } from "./match.js";
+import { modelicaRootFile } from "../packageRoot.js";
 
 /** A `.mo` file in the workspace. */
 class FileNode extends vscode.TreeItem {
@@ -80,9 +81,17 @@ export class ModelsTreeProvider implements vscode.TreeDataProvider<ModelNode> {
   }
 
   private async classes(file: FileNode): Promise<ClassNode[]> {
+    let loadPath = file.uri.fsPath;
+    try {
+      const source = new TextDecoder().decode(await vscode.workspace.fs.readFile(file.uri));
+      loadPath = modelicaRootFile(file.uri.fsPath, source);
+    } catch {
+      // Keep the tree usable for an unreadable file; OMC may still explain why
+      // it cannot be loaded when the user opens it.
+    }
     const names = await this.omc.withSession(
       async (session): Promise<readonly string[]> =>
-        await findClassesInFile(session, file.uri.fsPath),
+        await findClassesInFile(session, file.uri.fsPath, loadPath),
     );
     if (names === undefined || names.length === 0) {
       return [];

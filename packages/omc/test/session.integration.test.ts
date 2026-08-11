@@ -47,6 +47,29 @@ suite("interactive OMC session (requires an installed OpenModelica)", () => {
     expect(await session.takeDiagnostics()).toEqual([]);
   }, 60_000);
 
+  it("loads a directory-backed package and a model created within it", async () => {
+    expect(await session.loadFile(path.join(fixtures, "authoring/PackageRoot/package.mo"))).toBe(
+      true,
+    );
+    expect(
+      await session.loadFile(path.join(fixtures, "authoring/PackageRoot/NestedModel.mo")),
+    ).toBe(true);
+    expect(await session.takeDiagnostics()).toEqual([]);
+    expect(await session.checkModel("PackageRoot.NestedModel")).toContain(
+      "PackageRoot.NestedModel",
+    );
+    expect(await session.takeDiagnostics()).toEqual([]);
+  }, 60_000);
+
+  it("loads and checks the exact directory-backed child package source", async () => {
+    expect(await session.loadFile(path.join(fixtures, "authoring/PackageRoot/package.mo"))).toBe(
+      true,
+    );
+    expect(await session.takeDiagnostics()).toEqual([]);
+    expect(await session.checkModel("PackageRoot.Examples")).toContain("PackageRoot.Examples");
+    expect(await session.takeDiagnostics()).toEqual([]);
+  }, 60_000);
+
   it("surfaces a real diagnostic for a bad model without inventing a range", async () => {
     await session.loadFile(path.join(fixtures, "syntax/BrokenModel.mo"));
     await session.takeDiagnostics();
