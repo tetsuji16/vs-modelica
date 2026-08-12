@@ -2,7 +2,7 @@
   "name": "modelica-studio",
   "displayName": "Modelica Studio OSS",
   "description": "Open-source graphical Modelica editor powered by OpenModelica",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "tetsuji16",
   "license": "MIT",
   "icon": "media/activity-bar.png",

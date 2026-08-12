@@ -2,6 +2,15 @@
 
 All notable changes to the "Modelica Studio OSS" extension are documented here.
 
+## 0.1.1
+
+### Fixes
+
+- Marketplace icon: replaced the transparent white line-art with an opaque blue
+  rounded-square badge carrying the white glyph, so the extension stays visible
+  on both light and dark Marketplace tiles. The activity-bar and language file
+  icons remain theme-aware (`currentColor` / explicit light + dark SVGs).
+
 ## 0.1.0
 
 First publishable milestone of the clean-room, open-source Modelica authoring
