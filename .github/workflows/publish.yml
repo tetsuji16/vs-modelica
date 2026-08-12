@@ -64,6 +64,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build the extension
+        run: pnpm build
       - name: Build and publish
         working-directory: apps/vscode
         env:
