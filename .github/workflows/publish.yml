@@ -32,7 +32,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Build the extension (TS + webview + bundled extension host)
-        run: pnpm --filter modelica-studio build
+        run: pnpm build
       - name: Package the VSIX
         working-directory: apps/vscode
         run: pnpm exec vsce package --no-dependencies
