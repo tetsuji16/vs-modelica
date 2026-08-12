@@ -19,6 +19,8 @@
     "sample:edit": "node tools/run-edit-check.mjs",
     "test:visual": "node tools/visual/capture.mjs",
     "test:visual:update": "node tools/visual/capture.mjs --update",
+    "package:extension": "pnpm --filter modelica-studio build && pnpm --filter modelica-studio exec vsce package --no-dependencies",
+    "publish:extension": "pnpm --filter modelica-studio build && pnpm --filter modelica-studio exec vsce publish --no-dependencies",
     "clean": "pnpm -r clean",
     "prepare": "husky"
   },
@@ -30,6 +32,7 @@
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@types/node": "^22.15.0",
+    "@vscode/vsce": "^3.5.0",
     "eslint": "^9.36.0",
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",

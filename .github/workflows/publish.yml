@@ -1,0 +1,71 @@
+name: Publish to VS Code Marketplace
+
+# Keeps the Marketplace listing current with main. The extension is built and
+# packaged on every push so packaging regressions fail fast; it is only
+# published to the Marketplace when the push lands on `main`.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to the Marketplace even from a manual run"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build and package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.4.0
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the extension (TS + webview + bundled extension host)
+        run: pnpm --filter modelica-studio build
+      - name: Package the VSIX
+        working-directory: apps/vscode
+        run: pnpm exec vsce package --no-dependencies
+      - name: Upload the VSIX as a build artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: modelica-studio-vsix
+          path: apps/vscode/*.vsix
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish to Marketplace
+    needs: package
+    if: >-
+      ${{
+        (github.ref == 'refs/heads/main' && github.event_name == 'push')
+        || (github.event_name == 'workflow_dispatch' && inputs.publish)
+      }}
+    runs-on: ubuntu-latest
+    environment: marketplace
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.4.0
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build and publish
+        working-directory: apps/vscode
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: pnpm exec vsce publish --no-dependencies

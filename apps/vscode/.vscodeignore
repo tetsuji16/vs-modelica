@@ -10,9 +10,10 @@ node_modules/**
 **/*.test.ts
 tools/**
 docs/**
-**/*.tsbuildinfo
 
-# Only the compiled extension and media belong in the package.
+# Only the compiled, bundled extension and media belong in the package.
+# `src/` is compiled and bundled into dist/extension.js by tools/build-extension.mjs,
+# so the TypeScript sources are not needed at runtime.
 !dist/**
 !media/**
 !language/**
